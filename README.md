@@ -1,5 +1,5 @@
-node-agent-base
-===============
+agent-base
+==========
 ### Barebone `http.Agent` implementation
 
 This module provides a very basic, barebones implementation of a Node.js
