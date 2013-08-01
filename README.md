@@ -23,6 +23,7 @@ add yours!
 
  * [`http-proxy-agent`][http-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTP endpoints
  * [`https-proxy-agent`][https-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTPS endpoints
+ * [`socks-proxy-agent`][socks-proxy-agent]: A SOCKS (v4a) proxy `http.Agent` implementation for HTTP and HTTPS
 
 
 Installation
@@ -85,3 +86,4 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [http-proxy-agent]: https://github.com/TooTallNate/node-http-proxy-agent
 [https-proxy-agent]: https://github.com/TooTallNate/node-https-proxy-agent
+[socks-proxy-agent]: https://github.com/TooTallNate/node-socks-proxy-agent
