@@ -3,7 +3,6 @@
  * Module dependencies.
  */
 
-var net = require('net');
 var inherits = require('util').inherits;
 var EventEmitter = require('events').EventEmitter;
 
@@ -14,29 +13,17 @@ var EventEmitter = require('events').EventEmitter;
 module.exports = Agent;
 
 /**
- * Barebones HTTP "Agent" implementation. Emulates the node-core `http.Agent`
- * class, but implemented in a way that can be easily extended for additional
- * functionality.
- *
- * This base implementation does no socket pooling, and opens
- * a new connection for every HTTP request.
- *
- * It behaves more-or-less like `agent: false`.
  *
  * @api public
  */
 
-function Agent () {
-  if (!(this instanceof Agent)) return new Agent();
+function Agent (callback) {
+  if (!(this instanceof Agent)) return new Agent(callback);
+  if ('function' != typeof callback) throw new Error('Must pass a "callback function"');
   EventEmitter.call(this);
+  this.callback = callback;
 }
 inherits(Agent, EventEmitter);
-
-/**
- * Default port to connect to.
- */
-
-Agent.prototype.defaultPort = 80;
 
 /**
  * Called by node-core's "_http_client.js" module when creating
@@ -50,41 +37,31 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
   if ('object' == typeof host) {
     // >= v0.11.x API
     opts = host;
+    if (opts.host && opts.path) {
+      // if both a `host` and `path` are specified then it's most likely the
+      // result of a `url.parse()` call... we need to remove the `path` portion so
+      // that `net.connect()` doesn't attempt to open that as a unix socket file.
+      delete opts.path;
+    }
   } else {
     // <= v0.10.x API
-    opts = {
-      host: host,
-      port: port,
-      localAddress: localAddress
-    };
+    opts = { host: host, port: port };
+    if (null != localAddress) {
+      opts.localAddress = localAddress;
+    }
   }
 
   // hint to use "Connection: close"
+  // XXX: non-documented `http` module API :(
+  req._last = true;
   req.shouldKeepAlive = false;
 
   // create the `net.Socket` instance
-  var info = {
-    host: opts.hostname || opts.host,
-    port: +opts.port || this.defaultPort,
-    localAddress: opts.localAddress
-  };
-  this.createConnection(info, function (err, socket) {
+  this.callback(req, opts, function (err, socket) {
     if (err) {
       req.emit('error', err);
     } else {
       req.onSocket(socket);
     }
   });
-};
-
-/**
- * Creates and returns a `net.Socket` instance to use for an HTTP request.
- *
- * @api protected
- */
-
-Agent.prototype.createConnection = function (opts, fn) {
-  var socket = net.connect(opts);
-  fn(null, socket);
-  return socket;
 };
