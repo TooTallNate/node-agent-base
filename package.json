@@ -1,7 +1,7 @@
 {
   "name": "agent-base",
   "version": "0.0.1",
-  "description": "Barebones `http.Agent` implementation",
+  "description": "Turn a function into an `http.Agent` instance",
   "main": "agent.js",
   "scripts": {
     "test": "mocha --reporter spec"

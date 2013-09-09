@@ -1,6 +1,6 @@
 agent-base
 ==========
-### Barebones `http.Agent` implementation
+### Turn a function into an `http.Agent` instance
 [![Build Status](https://travis-ci.org/TooTallNate/node-agent-base.png?branch=master)](https://travis-ci.org/TooTallNate/node-agent-base)
 
 This module provides an `http.Agent` generator. That is, you pass it an async
