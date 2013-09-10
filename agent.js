@@ -57,11 +57,22 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
   req.shouldKeepAlive = false;
 
   // create the `net.Socket` instance
+  var sync = true;
   this.callback(req, opts, function (err, socket) {
-    if (err) {
+    function emitErr () {
       req.emit('error', err);
+    }
+    if (err) {
+      if (sync) {
+        // need to defer the "error" event, when sync, because by now the `req`
+        // instance hasn't event been passed back to the user yet...
+        process.nextTick(emitErr);
+      } else {
+        emitErr();
+      }
     } else {
       req.onSocket(socket);
     }
   });
+  sync = false;
 };
