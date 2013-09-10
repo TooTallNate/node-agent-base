@@ -12,6 +12,37 @@ var https = require('https');
 var assert = require('assert');
 var Agent = require('../');
 
+describe('Agent', function () {
+  describe('"error" event', function () {
+    it('should be invoked on `http.ClientRequest` instance if passed to callback function on the first tick', function (done) {
+      var agent = new Agent(function (req, opts, fn) {
+        fn(new Error('is this caught?'));
+      });
+      var info = url.parse('http://127.0.0.1/foo');
+      info.agent = agent;
+      var req = http.get(info);
+      req.on('error', function (err) {
+        assert.equal('is this caught?', err.message);
+        done();
+      });
+    });
+    it('should be invoked on `http.ClientRequest` instance if passed to callback function after the first tick', function (done) {
+      var agent = new Agent(function (req, opts, fn) {
+        process.nextTick(function () {
+          fn(new Error('is this caught?'));
+        });
+      });
+      var info = url.parse('http://127.0.0.1/foo');
+      info.agent = agent;
+      var req = http.get(info);
+      req.on('error', function (err) {
+        assert.equal('is this caught?', err.message);
+        done();
+      });
+    });
+  });
+});
+
 describe('"http" module', function () {
   var server;
   var port;
@@ -79,7 +110,6 @@ describe('"http" module', function () {
       done();
     });
   });
-
 });
 
 describe('"https" module', function () {
