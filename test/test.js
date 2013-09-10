@@ -28,9 +28,9 @@ describe('Agent', function () {
     });
     it('should be invoked on `http.ClientRequest` instance if passed to callback function after the first tick', function (done) {
       var agent = new Agent(function (req, opts, fn) {
-        process.nextTick(function () {
+        setTimeout(function () {
           fn(new Error('is this caught?'));
-        });
+        }, 10);
       });
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
