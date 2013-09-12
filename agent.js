@@ -61,6 +61,9 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
   this.callback(req, opts, function (err, socket) {
     function emitErr () {
       req.emit('error', err);
+      // For Safety. Some additional errors might fire later on
+      // and we need to make sure we don't double-fire the error event.
+      req._hadError = true;
     }
     if (err) {
       if (sync) {
