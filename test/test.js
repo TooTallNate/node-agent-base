@@ -10,6 +10,7 @@ var tls = require('tls');
 var http = require('http');
 var https = require('https');
 var assert = require('assert');
+var events = require('events');
 var Agent = require('../');
 
 describe('Agent', function () {
@@ -39,6 +40,38 @@ describe('Agent', function () {
         assert.equal('is this caught?', err.message);
         done();
       });
+    });
+  });
+  describe('artificial "data" events', function () {
+    it('should work for an artificial EventEmitter "stream" GET request', function (done) {
+      var stream = new events.EventEmitter();
+      var opts = {
+        method: 'GET',
+        host: '127.0.0.1',
+        path: '/',
+        port: 80,
+        agent: new Agent(function (req, opts, fn) {
+          fn(null, stream);
+        })
+      };
+      var req = http.request(opts, function (res) {
+        assert.equal('0.9', res.httpVersion);
+        assert.equal(111, res.statusCode);
+        assert.equal('bar', res.headers.foo);
+        done();
+      });
+      req.end();
+
+      // have to nextTick() since `http.ClientRequest` doesn't *actually*
+      // attach the listeners to the "stream" until the next tick :\
+      process.nextTick(function () {
+        var buf = new Buffer('HTTP/0.9 111\r\n' +
+                             'Foo: bar\r\n' +
+                             'Set-Cookie: 1\r\n' +
+                             'Set-Cookie: 2\r\n\r\n');
+        stream.ondata(buf, 0, buf.length);
+      });
+
     });
   });
 });
