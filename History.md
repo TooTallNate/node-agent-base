@@ -1,3 +1,14 @@
+
+1.0.2 / 2015-06-27
+==================
+
+  * agent: set `req._hadError` to true after emitting "error"
+  * package: update "mocha" to v2
+  * test: add artificial HTTP GET request test
+  * test: add artificial data events test
+  * test: fix artifical GET response test on node > v0.11.3
+  * test: use a real timeout for the async error test
+
 1.0.1 / 2013-09-09
 ==================
 
