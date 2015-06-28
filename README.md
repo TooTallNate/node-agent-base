@@ -1,7 +1,7 @@
 agent-base
 ==========
 ### Turn a function into an `http.Agent` instance
-[![Build Status](https://travis-ci.org/TooTallNate/node-agent-base.png?branch=master)](https://travis-ci.org/TooTallNate/node-agent-base)
+[![Build Status](https://travis-ci.org/TooTallNate/node-agent-base.svg?branch=master)](https://travis-ci.org/TooTallNate/node-agent-base)
 
 This module provides an `http.Agent` generator. That is, you pass it an async
 callback function, and it returns a new `http.Agent` instance that will invoke the
