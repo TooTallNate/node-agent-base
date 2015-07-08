@@ -63,6 +63,28 @@ http.get(opts, function (res) {
 });
 ```
 
+API
+---
+
+## Agent(Function callback) → http.Agent
+
+Creates a base `http.Agent` that will execute the callback function `callback`
+for every HTTP request that it is used as the `agent` for. The callback function
+is responsible for creating a `stream.Duplex` instance of some kind that will be
+used as the underlying socket in the HTTP request.
+
+The callback function should have the following signature:
+
+### callback(http.ClientRequest req, Object options, Function cb) → undefined
+
+The ClientRequest `req` can be accessed to read request headers and
+and the path, etc. The `options` object contains the options passed
+to the `http.request()`/`https.request()` function call, and is formatted
+to be directly passed to `net.connect()`/`tls.connect()`, or however
+else you want a Socket to be created. Pass the created socket to
+the callback function `cb` once created, and the HTTP request will
+continue to proceed.
+
 
 License
 -------
