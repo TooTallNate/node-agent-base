@@ -189,8 +189,8 @@ describe('"https" module', function () {
   // setup test HTTPS server
   before(function (done) {
     var options = {
-      key: fs.readFileSync(__dirname + '/server.key'),
-      cert: fs.readFileSync(__dirname + '/server.crt')
+      key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+      cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
     };
     server = https.createServer(options);
     server.listen(0, function () {
