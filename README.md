@@ -9,8 +9,8 @@ given callback function when sending outbound HTTP requests.
 
 #### Some subclasses:
 
-Here's some more interesting uses of `agent-base`. Send a pull request to
-list yours!
+Here's some more interesting uses of `agent-base`.
+Send a pull request to list yours!
 
  * [`http-proxy-agent`][http-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTP endpoints
  * [`https-proxy-agent`][https-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTPS endpoints
@@ -35,8 +35,9 @@ Here's a minimal example that creates a new `net.Socket` connection to the serve
 for every HTTP request (i.e. the equivalent of `agent: false` option):
 
 ``` js
-var url = require('url');
 var net = require('net');
+var tls = require('tls');
+var url = require('url');
 var http = require('http');
 var agent = require('agent-base');
 
@@ -45,8 +46,13 @@ var opts = url.parse(endpoint);
 
 // This is the important part!
 opts.agent = agent(function (req, opts, fn) {
-  if (!opts.port) opts.port = 80;
-  var socket = net.connect(opts);
+  var socket;
+  // `secureEndpoint` is true when using the https module
+  if (opts.secureEndpoint) {
+    socket = tls.connect(opts);
+  } else {
+    socket = net.connect(opts);
+  }
   fn(null, socket);
 });
 
