@@ -180,6 +180,21 @@ describe('"http" module', function () {
       done();
     });
   });
+
+  it('should default to port 80', function (done) {
+    var agent = new Agent(function (req, opts, fn) {
+      assert.equal(80, opts.port);
+      done();
+    });
+
+    // (probably) not hitting a real HTTP server here,
+    // so no need to add a httpServer request listener
+    http.get({
+      host: '127.0.0.1',
+      path: '/foo',
+      agent: agent
+    });
+  });
 });
 
 describe('"https" module', function () {
@@ -234,6 +249,25 @@ describe('"https" module', function () {
       assert(gotReq);
       assert(called);
       done();
+    });
+  });
+
+  it('should default to port 443', function (done) {
+    var agent = new Agent(function (req, opts, fn) {
+      assert.equal(true, opts.secureEndpoint);
+      assert.equal(false, opts.rejectUnauthorized);
+      assert.equal(443, opts.port);
+      done();
+    });
+
+    // (probably) not hitting a real HTTPS server here,
+    // so no need to add a httpsServer request listener
+    var info = url.parse('https://127.0.0.1/foo');
+    https.get({
+      host: '127.0.0.1',
+      path: '/foo',
+      agent: agent,
+      rejectUnauthorized: false
     });
   });
 });

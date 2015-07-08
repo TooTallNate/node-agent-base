@@ -47,6 +47,7 @@ https.request = (function (request) {
     if (typeof options === 'string') {
       options = url.parse(options);
     }
+    if (null == options.port) options.port = 443;
     options.secureEndpoint = true;
     return request.call(https, options, cb);
   };

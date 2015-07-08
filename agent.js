@@ -57,9 +57,15 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
     delete opts.path;
   }
 
+  // set default `port` if none was explicitly specified
+  if (null == opts.port) {
+    opts.port = opts.secureEndpoint ? 443 : 80;
+  }
+
   delete opts.agent;
   delete opts.hostname;
   delete opts._defaultAgent;
+  delete opts.defaultPort;
 
   // hint to use "Connection: close"
   // XXX: non-documented `http` module API :(
