@@ -125,14 +125,14 @@ describe('"http" module', function () {
     server.close();
   });
 
-  // test subject `http.Agent` instance
-  var agent = new Agent(function (req, opts, fn) {
-    if (!opts.port) opts.port = 80;
-    var socket = net.connect(opts);
-    fn(null, socket);
-  });
-
   it('should work for basic HTTP requests', function (done) {
+    var called = false;
+    var agent = new Agent(function (req, opts, fn) {
+      called = true;
+      var socket = net.connect(opts);
+      fn(null, socket);
+    });
+
     // add HTTP server "request" listener
     var gotReq = false;
     server.once('request', function (req, res) {
@@ -148,11 +148,19 @@ describe('"http" module', function () {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
+      assert(called);
       done();
     });
   });
 
   it('should set the `Connection: close` response header', function (done) {
+    var called = false;
+    var agent = new Agent(function (req, opts, fn) {
+      called = true;
+      var socket = net.connect(opts);
+      fn(null, socket);
+    });
+
     // add HTTP server "request" listener
     var gotReq = false;
     server.once('request', function (req, res) {
@@ -168,6 +176,7 @@ describe('"http" module', function () {
       assert.equal('/bar', res.headers['x-url']);
       assert.equal('close', res.headers.connection);
       assert(gotReq);
+      assert(called);
       done();
     });
   });
@@ -198,15 +207,15 @@ describe('"https" module', function () {
     server.close();
   });
 
-  // test subject `http.Agent` instance
-  var agent = new Agent(function (req, opts, fn) {
-    if (!opts.port) opts.port = 443;
-    opts.rejectUnauthorized = false;
-    var socket = tls.connect(opts);
-    fn(null, socket);
-  });
-
   it('should work for basic HTTPS requests', function (done) {
+    var called = false;
+    var agent = new Agent(function (req, opts, fn) {
+      called = true;
+      assert(opts.secureEndpoint);
+      var socket = tls.connect(opts);
+      fn(null, socket);
+    });
+
     // add HTTPS server "request" listener
     var gotReq = false;
     server.once('request', function (req, res) {
@@ -223,6 +232,7 @@ describe('"https" module', function () {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
+      assert(called);
       done();
     });
   });

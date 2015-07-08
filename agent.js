@@ -3,6 +3,8 @@
  * Module dependencies.
  */
 
+require('./patch-core');
+var extend = require('extend');
 var inherits = require('util').inherits;
 var EventEmitter = require('events').EventEmitter;
 
@@ -13,7 +15,10 @@ var EventEmitter = require('events').EventEmitter;
 module.exports = Agent;
 
 /**
+ * Base `http.Agent` implementation.
+ * No pooling/keep-alive is implemented by default.
  *
+ * @param {Function} callback
  * @api public
  */
 
@@ -36,25 +41,33 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
   var opts;
   if ('object' == typeof host) {
     // >= v0.11.x API
-    opts = host;
-    if (opts.host && opts.path) {
-      // if both a `host` and `path` are specified then it's most likely the
-      // result of a `url.parse()` call... we need to remove the `path` portion so
-      // that `net.connect()` doesn't attempt to open that as a unix socket file.
-      delete opts.path;
-    }
+    opts = extend({}, req._options, host);
   } else {
     // <= v0.10.x API
-    opts = { host: host, port: port };
+    opts = extend({}, req._options, { host: host, port: port });
     if (null != localAddress) {
       opts.localAddress = localAddress;
     }
   }
 
+  if (opts.host && opts.path) {
+    // if both a `host` and `path` are specified then it's most likely the
+    // result of a `url.parse()` call... we need to remove the `path` portion so
+    // that `net.connect()` doesn't attempt to open that as a unix socket file.
+    delete opts.path;
+  }
+
+  delete opts.agent;
+  delete opts.hostname;
+  delete opts._defaultAgent;
+
   // hint to use "Connection: close"
   // XXX: non-documented `http` module API :(
   req._last = true;
   req.shouldKeepAlive = false;
+
+  // clean up a bit of memory since we're no longer using this
+  req._options = null;
 
   // create the `net.Socket` instance
   var sync = true;
