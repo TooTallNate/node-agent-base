@@ -262,7 +262,6 @@ describe('"https" module', function () {
 
     // (probably) not hitting a real HTTPS server here,
     // so no need to add a httpsServer request listener
-    var info = url.parse('https://127.0.0.1/foo');
     https.get({
       host: '127.0.0.1',
       path: '/foo',
