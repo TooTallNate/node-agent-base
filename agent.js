@@ -66,6 +66,7 @@ Agent.prototype.addRequest = function (req, host, port, localAddress) {
   delete opts.hostname;
   delete opts._defaultAgent;
   delete opts.defaultPort;
+  delete opts.createConnection;
 
   // hint to use "Connection: close"
   // XXX: non-documented `http` module API :(
