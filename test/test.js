@@ -181,6 +181,20 @@ describe('"http" module', function () {
     });
   });
 
+  it('should pass through options from `http.request()`', function (done) {
+    var agent = new Agent(function (req, opts, fn) {
+      assert.equal('google.com', opts.host);
+      assert.equal('bar', opts.foo);
+      done();
+    });
+
+    http.get({
+      host: 'google.com',
+      foo: 'bar',
+      agent: agent
+    });
+  });
+
   it('should default to port 80', function (done) {
     var agent = new Agent(function (req, opts, fn) {
       assert.equal(80, opts.port);
@@ -249,6 +263,20 @@ describe('"https" module', function () {
       assert(gotReq);
       assert(called);
       done();
+    });
+  });
+
+  it('should pass through options from `https.request()`', function (done) {
+    var agent = new Agent(function (req, opts, fn) {
+      assert.equal('google.com', opts.host);
+      assert.equal('bar', opts.foo);
+      done();
+    });
+
+    https.get({
+      host: 'google.com',
+      foo: 'bar',
+      agent: agent
     });
   });
 
