@@ -85,6 +85,9 @@ else you want a Socket to be created. Pass the created socket to
 the callback function `cb` once created, and the HTTP request will
 continue to proceed.
 
+If the `https` module is used to invoke the HTTP request, then the
+`secureEndpoint` property on `options` will be set to `true`.
+
 
 License
 -------
