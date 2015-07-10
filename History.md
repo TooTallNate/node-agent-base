@@ -1,4 +1,15 @@
 
+2.0.0 / 2015-07-10
+==================
+
+  * refactor to patch Node.js core for more consistent `opts` values
+  * ensure that HTTP(s) default port numbers are always given
+  * test: use ssl-cert-snakeoil SSL certs
+  * test: add tests for arbitrary options
+  * README: add API section
+  * README: make the Agent HTTP/HTTPS generic in the example
+  * README: use SVG for Travis-CI badge
+
 1.0.2 / 2015-06-27
 ==================
 
