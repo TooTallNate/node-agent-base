@@ -27,6 +27,6 @@
   },
   "dependencies": {
     "extend": "~3.0.0",
-    "semver": "~4.3.6"
+    "semver": "~5.0.1"
   }
 }
