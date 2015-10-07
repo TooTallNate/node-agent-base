@@ -37,7 +37,7 @@ inherits(Agent, EventEmitter);
  * @api public
  */
 
-Agent.prototype.addRequest = function (req, host, port, localAddress) {
+Agent.prototype.addRequest = function addRequest (req, host, port, localAddress) {
   var opts;
   if ('object' == typeof host) {
     // >= v0.11.x API
