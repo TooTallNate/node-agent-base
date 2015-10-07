@@ -11,11 +11,41 @@ var http = require('http');
 var https = require('https');
 var assert = require('assert');
 var events = require('events');
+var inherits = require('util').inherits;
 var Agent = require('../');
 
 describe('Agent', function () {
+  describe('subclass', function () {
+    it('should be subclassable', function (done) {
+      function MyAgent () {
+        Agent.call(this);
+      }
+      inherits(MyAgent, Agent);
+
+      MyAgent.prototype.callback = function (req, opts, fn) {
+        assert.equal(req.path, '/foo');
+        assert.equal(req.getHeader('host'), '127.0.0.1:1234');
+        assert.equal(opts.secureEndpoint, true);
+        done();
+      };
+
+      var info = url.parse('https://127.0.0.1:1234/foo');
+      info.agent = new MyAgent;
+      https.get(info);
+    });
+  });
   describe('"error" event', function () {
-    it('should be invoked on `http.ClientRequest` instance if passed to callback function on the first tick', function (done) {
+    it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function (done) {
+      var agent = new Agent();
+      var info = url.parse('http://127.0.0.1/foo');
+      info.agent = agent;
+      var req = http.get(info);
+      req.on('error', function (err) {
+        assert.equal('"agent-base" has no default implementation, you must subclass and override `callback()`', err.message);
+        done();
+      });
+    });
+    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function on the first tick', function (done) {
       var agent = new Agent(function (req, opts, fn) {
         fn(new Error('is this caught?'));
       });
@@ -27,7 +57,7 @@ describe('Agent', function () {
         done();
       });
     });
-    it('should be invoked on `http.ClientRequest` instance if passed to callback function after the first tick', function (done) {
+    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function after the first tick', function (done) {
       var agent = new Agent(function (req, opts, fn) {
         setTimeout(function () {
           fn(new Error('is this caught?'));
