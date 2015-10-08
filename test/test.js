@@ -9,6 +9,7 @@ var net = require('net');
 var tls = require('tls');
 var http = require('http');
 var https = require('https');
+var WebSocket = require('ws');
 var assert = require('assert');
 var events = require('events');
 var inherits = require('util').inherits;
@@ -327,4 +328,119 @@ describe('"https" module', function () {
       rejectUnauthorized: false
     });
   });
+});
+
+describe('"ws" server', function () {
+  var wss;
+  var server;
+  var port;
+
+  // setup test HTTP server
+  before(function (done) {
+    server = http.createServer()
+    wss = new WebSocket.Server({ server: server });
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+
+  // shut down test HTTP server
+  after(function (done) {
+    server.once('close', function () {
+      done();
+    });
+    server.close();
+  });
+
+  it('should work for basic WebSocket connections', function (done) {
+    function onconnection(ws) {
+      ws.on('message', function (data) {
+        assert.equal('ping', data);
+        ws.send('pong');
+      });
+    }
+    wss.on('connection', onconnection);
+
+    var agent = new Agent(function (req, opts, fn) {
+      var socket = net.connect(opts);
+      fn(null, socket);
+    });
+
+    var client = new WebSocket('ws://127.0.0.1:' + port + '/', {
+      agent: agent
+    });
+
+    client.on('open', function () {
+      client.send('ping');
+    });
+
+    client.on('message', function (data) {
+      assert.equal('pong', data);
+      client.close();
+      wss.removeListener('connection', onconnection);
+      done();
+    });
+  });
+
+});
+
+describe('"wss" server', function () {
+  var wss;
+  var server;
+  var port;
+
+  // setup test HTTP server
+  before(function (done) {
+    var options = {
+      key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+      cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
+    };
+    server = https.createServer(options);
+    wss = new WebSocket.Server({ server: server });
+    server.listen(0, function () {
+      port = server.address().port;
+      done();
+    });
+  });
+
+  // shut down test HTTP server
+  after(function (done) {
+    server.once('close', function () {
+      done();
+    });
+    server.close();
+  });
+
+  it('should work for secure WebSocket connections', function (done) {
+    function onconnection(ws) {
+      ws.on('message', function (data) {
+        assert.equal('ping', data);
+        ws.send('pong');
+      });
+    }
+    wss.on('connection', onconnection);
+
+    var agent = new Agent(function (req, opts, fn) {
+      var socket = tls.connect(opts);
+      fn(null, socket);
+    });
+
+    var client = new WebSocket('wss://127.0.0.1:' + port + '/', {
+      agent: agent,
+      rejectUnauthorized: false
+    });
+
+    client.on('open', function () {
+      client.send('ping');
+    });
+
+    client.on('message', function (data) {
+      assert.equal('pong', data);
+      client.close();
+      wss.removeListener('connection', onconnection);
+      done();
+    });
+  });
+
 });
