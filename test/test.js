@@ -85,6 +85,10 @@ describe('Agent', function () {
         done();
       };
 
+      // needed for `http` module in Node.js 4
+      stream.cork = function () {
+      };
+
       var opts = {
         method: 'GET',
         host: '127.0.0.1',
