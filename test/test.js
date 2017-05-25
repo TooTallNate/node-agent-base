@@ -13,6 +13,7 @@ var WebSocket = require('ws');
 var assert = require('assert');
 var events = require('events');
 var inherits = require('util').inherits;
+var semver = require('semver');
 var Agent = require('../');
 
 describe('Agent', function () {
@@ -246,6 +247,10 @@ describe('"http" module', function () {
   });
 
   it('has no any dangling sockets', function (done) {
+      // unref is not supported for node < 0.9.1
+      if (semver.lt(process.version, '0.9.1')) {
+          return done()
+      }
       var agent = new Agent(function (req, opts, fn) {
           fn(null, net.connect(opts));
       });
