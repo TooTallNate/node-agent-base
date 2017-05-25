@@ -100,7 +100,9 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
       }
     } else {
       req.onSocket(socket);
-      socket.unref();
+      if (typeof socket.unref === 'function') {
+        socket.unref();
+      }
     }
   });
   sync = false;
