@@ -100,7 +100,7 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
       }
     } else {
       req.onSocket(socket);
-      if (typeof socket.unref === 'function') {
+      if (typeof socket.unref === 'function' && process.env.UNREF_SOCKETS) {
         socket.unref();
       }
     }

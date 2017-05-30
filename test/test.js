@@ -16,6 +16,9 @@ var inherits = require('util').inherits;
 var semver = require('semver');
 var Agent = require('../');
 
+// Enable UNREF_SOCKETS environment variable (disabled by default #7)
+process.env.UNREF_SOCKETS = true
+
 describe('Agent', function () {
   describe('subclass', function () {
     it('should be subclassable', function (done) {
