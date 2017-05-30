@@ -1,3 +1,7 @@
+2.1.1 / 2017-05-30
+==================
+
+  * disabled unref by default (#7) it can be enabled using `UNREF_SOCKETS` environment variable.
 
 2.1.0 / 2017-05-26
 ==================
