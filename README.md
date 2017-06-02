@@ -45,7 +45,7 @@ var endpoint = 'http://nodejs.org/api/';
 var parsed = url.parse(endpoint);
 
 // This is the important part!
-parsed.agent = agent(function (req, opts, fn) {
+parsed.agent = agent(function (req, opts) {
   var socket;
   // `secureEndpoint` is true when using the https module
   if (opts.secureEndpoint) {
@@ -53,7 +53,7 @@ parsed.agent = agent(function (req, opts, fn) {
   } else {
     socket = net.connect(opts);
   }
-  fn(null, socket);
+  return socket;
 });
 
 // Everything else works just like normal...
