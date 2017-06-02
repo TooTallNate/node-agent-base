@@ -29,7 +29,7 @@ if (semver.lt(process.version, '0.11.8')) {
       if (typeof options === 'string') {
         options = url.parse(options);
       }
-      if (options.protocol && options.protocol !== 'http:') {
+      if (options.protocol && options.protocol !== 'http:' && options.protocol !== 'https:') {
         throw new Error('Protocol:' + options.protocol + ' not supported.');
       }
       return new http.ClientRequest(options, cb);
