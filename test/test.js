@@ -129,11 +129,11 @@ describe('Agent', function () {
         assert.equal('bar', res.headers.foo);
         done();
       });
-      req.end();
 
-      // have to nextTick() since `http.ClientRequest` doesn't *actually*
-      // attach the listeners to the "stream" until the next tick :\
-      process.nextTick(function () {
+      // have to wait for the "socket" event since `http.ClientRequest`
+      // doesn't *actually* attach the listeners to the "stream" until
+      // this happens
+      req.once('socket', function () {
         var buf = new Buffer('HTTP/0.9 111\r\n' +
                              'Foo: bar\r\n' +
                              'Set-Cookie: 1\r\n' +
@@ -146,6 +146,8 @@ describe('Agent', function () {
           stream.emit('data', buf);
         }
       });
+
+      req.end();
     });
   });
 });
@@ -177,6 +179,62 @@ describe('"http" module', function () {
       called = true;
       var socket = net.connect(opts);
       fn(null, socket);
+    });
+
+    // add HTTP server "request" listener
+    var gotReq = false;
+    server.once('request', function (req, res) {
+      gotReq = true;
+      res.setHeader('X-Foo', 'bar');
+      res.setHeader('X-Url', req.url);
+      res.end();
+    });
+
+    var info = url.parse('http://127.0.0.1:' + port + '/foo');
+    info.agent = agent;
+    http.get(info, function (res) {
+      assert.equal('bar', res.headers['x-foo']);
+      assert.equal('/foo', res.headers['x-url']);
+      assert(gotReq);
+      assert(called);
+      done();
+    });
+  });
+
+  it('should support direct return in `connect()`', function (done) {
+    var called = false;
+    var agent = new Agent(function (req, opts) {
+      called = true;
+      return net.connect(opts);
+    });
+
+    // add HTTP server "request" listener
+    var gotReq = false;
+    server.once('request', function (req, res) {
+      gotReq = true;
+      res.setHeader('X-Foo', 'bar');
+      res.setHeader('X-Url', req.url);
+      res.end();
+    });
+
+    var info = url.parse('http://127.0.0.1:' + port + '/foo');
+    info.agent = agent;
+    http.get(info, function (res) {
+      assert.equal('bar', res.headers['x-foo']);
+      assert.equal('/foo', res.headers['x-url']);
+      assert(gotReq);
+      assert(called);
+      done();
+    });
+  });
+
+  it('should support returning a Promise in `connect()`', function (done) {
+    var called = false;
+    var agent = new Agent(function (req, opts) {
+      return new Promise(function (resolve, reject) {
+        called = true;
+        resolve(net.connect(opts));
+      });
     });
 
     // add HTTP server "request" listener

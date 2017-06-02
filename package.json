@@ -27,6 +27,7 @@
     "ws": "0.8.0"
   },
   "dependencies": {
+    "es6-promisify": "^5.0.0",
     "extend": "~3.0.0",
     "semver": "~5.0.1"
   }

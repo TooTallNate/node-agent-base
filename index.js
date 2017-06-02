@@ -5,6 +5,7 @@
 require('./patch-core');
 var extend = require('extend');
 var inherits = require('util').inherits;
+var promisify = require('es6-promisify');
 var EventEmitter = require('events').EventEmitter;
 
 /**
@@ -35,13 +36,21 @@ function Agent (callback, _opts) {
     opts = callback;
   }
 
+  if (this.callback.length >= 3) {
+    // legacy callback function, convert to Promise
+    this.callback = promisify(this.callback);
+  }
+
   // timeout for the socket to be returned from the callback
   this.timeout = opts && opts.timeout || null;
 }
 inherits(Agent, EventEmitter);
 
-Agent.prototype.callback = function callback (req, opts, fn) {
-  fn(new Error('"agent-base" has no default implementation, you must subclass and override `callback()`'));
+/**
+ * Override this function in your subclass!
+ */
+Agent.prototype.callback = function callback (req, opts) {
+  throw new Error('"agent-base" has no default implementation, you must subclass and override `callback()`');
 };
 
 /**
@@ -96,6 +105,7 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
   var timeoutMs = this.timeout;
 
   function onerror (err) {
+    if (req._hadError) return;
     req.emit('error', err);
     // For Safety. Some additional errors might fire later on
     // and we need to make sure we don't double-fire the error event.
@@ -113,28 +123,25 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
     timeout = setTimeout(ontimeout, timeoutMs);
   }
 
-
-  var sync = true;
-  this.callback(req, opts, function (err, socket) {
-    if (timedOut) {
-      return;
-    } else if (timeout != null) {
-      clearTimeout(timeout);
-    }
-
-    if (err) {
-      if (sync) {
-        // need to defer the "error" event, when sync, because by now the `req`
-        // instance hasn't even been passed back to the user yet...
-        process.nextTick(function () {
-          onerror(err);
-        });
-      } else {
+  try {
+    Promise.resolve(this.callback(req, opts))
+      .then(function (socket) {
+        if (timedOut) return;
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
+        req.onSocket(socket);
+      })
+      .catch(function (err) {
+        if (timedOut) return;
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
         onerror(err);
-      }
-    } else {
-      req.onSocket(socket);
-    }
-  });
-  sync = false;
+      });
+  } catch (err) {
+    process.nextTick(function () {
+      onerror(err);
+    });
+  }
 };
