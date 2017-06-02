@@ -36,6 +36,16 @@ describe('Agent', function () {
       https.get(info);
     });
   });
+  describe('options', function () {
+    it('should support an options Object as first argument', function () {
+      var agent = new Agent({ timeout: 1000 });
+      assert.equal(1000, agent.timeout);
+    });
+    it('should support an options Object as second argument', function () {
+      var agent = new Agent(function(){}, { timeout: 1000 });
+      assert.equal(1000, agent.timeout);
+    });
+  });
   describe('"error" event', function () {
     it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function (done) {
       var agent = new Agent();
