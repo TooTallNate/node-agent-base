@@ -23,7 +23,7 @@ module.exports = Agent;
 
 function Agent (callback, _opts) {
   if (!(this instanceof Agent)) {
-    return new Agent(callback, opts);
+    return new Agent(callback, _opts);
   }
 
   EventEmitter.call(this);
