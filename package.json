@@ -23,7 +23,7 @@
     "url": "https://github.com/TooTallNate/node-agent-base/issues"
   },
   "devDependencies": {
-    "mocha": "2",
+    "mocha": "3",
     "ws": "0.8.0"
   },
   "dependencies": {
