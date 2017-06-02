@@ -1,4 +1,3 @@
-
 /**
  * Module dependencies.
  */
@@ -16,15 +15,15 @@ var inherits = require('util').inherits;
 var semver = require('semver');
 var Agent = require('../');
 
-describe('Agent', function () {
-  describe('subclass', function () {
-    it('should be subclassable', function (done) {
-      function MyAgent () {
+describe('Agent', function() {
+  describe('subclass', function() {
+    it('should be subclassable', function(done) {
+      function MyAgent() {
         Agent.call(this);
       }
       inherits(MyAgent, Agent);
 
-      MyAgent.prototype.callback = function (req, opts, fn) {
+      MyAgent.prototype.callback = function(req, opts, fn) {
         assert.equal(req.path, '/foo');
         assert.equal(req.getHeader('host'), '127.0.0.1:1234');
         assert.equal(opts.secureEndpoint, true);
@@ -32,98 +31,106 @@ describe('Agent', function () {
       };
 
       var info = url.parse('https://127.0.0.1:1234/foo');
-      info.agent = new MyAgent;
+      info.agent = new MyAgent();
       https.get(info);
     });
   });
-  describe('options', function () {
-    it('should support an options Object as first argument', function () {
+  describe('options', function() {
+    it('should support an options Object as first argument', function() {
       var agent = new Agent({ timeout: 1000 });
       assert.equal(1000, agent.timeout);
     });
-    it('should support an options Object as second argument', function () {
-      var agent = new Agent(function(){}, { timeout: 1000 });
+    it('should support an options Object as second argument', function() {
+      var agent = new Agent(function() {}, { timeout: 1000 });
       assert.equal(1000, agent.timeout);
     });
   });
-  describe('"error" event', function () {
-    it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function (done) {
+  describe('"error" event', function() {
+    it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function(
+      done
+    ) {
       var agent = new Agent();
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
       var req = http.get(info);
-      req.on('error', function (err) {
-        assert.equal('"agent-base" has no default implementation, you must subclass and override `callback()`', err.message);
+      req.on('error', function(err) {
+        assert.equal(
+          '"agent-base" has no default implementation, you must subclass and override `callback()`',
+          err.message
+        );
         done();
       });
     });
-    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function on the first tick', function (done) {
-      var agent = new Agent(function (req, opts, fn) {
+    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function on the first tick', function(
+      done
+    ) {
+      var agent = new Agent(function(req, opts, fn) {
         fn(new Error('is this caught?'));
       });
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
       var req = http.get(info);
-      req.on('error', function (err) {
+      req.on('error', function(err) {
         assert.equal('is this caught?', err.message);
         done();
       });
     });
-    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function after the first tick', function (done) {
-      var agent = new Agent(function (req, opts, fn) {
-        setTimeout(function () {
+    it('should be invoked on `http.ClientRequest` instance if Error passed to callback function after the first tick', function(
+      done
+    ) {
+      var agent = new Agent(function(req, opts, fn) {
+        setTimeout(function() {
           fn(new Error('is this caught?'));
         }, 10);
       });
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
       var req = http.get(info);
-      req.on('error', function (err) {
+      req.on('error', function(err) {
         assert.equal('is this caught?', err.message);
         done();
       });
     });
   });
-  describe('artificial "streams"', function () {
-    it('should send a GET request', function (done) {
+  describe('artificial "streams"', function() {
+    it('should send a GET request', function(done) {
       var stream = new events.EventEmitter();
 
       // needed for the `http` module to call .write() on the stream
       stream.writable = true;
 
-      stream.write = function (str) {
+      stream.write = function(str) {
         assert(0 == str.indexOf('GET / HTTP/1.1'));
         done();
       };
 
       // needed for `http` module in Node.js 4
-      stream.cork = function () {
-      };
+      stream.cork = function() {};
 
       var opts = {
         method: 'GET',
         host: '127.0.0.1',
         path: '/',
         port: 80,
-        agent: new Agent(function (req, opts, fn) {
+        agent: new Agent(function(req, opts, fn) {
           fn(null, stream);
         })
       };
       var req = http.request(opts);
       req.end();
     });
-    it('should receive a GET response', function (done) {
+    it('should receive a GET response', function(done) {
       var stream = new events.EventEmitter();
       var opts = {
         method: 'GET',
         host: '127.0.0.1',
         path: '/',
         port: 80,
-        agent: new Agent(function (req, opts, fn) {
+        agent: new Agent(function(req, opts, fn) {
           fn(null, stream);
         })
       };
-      var req = http.request(opts, function (res) {
+      var req = http.request(opts, function(res) {
         assert.equal('0.9', res.httpVersion);
         assert.equal(111, res.statusCode);
         assert.equal('bar', res.headers.foo);
@@ -133,11 +140,13 @@ describe('Agent', function () {
       // have to wait for the "socket" event since `http.ClientRequest`
       // doesn't *actually* attach the listeners to the "stream" until
       // this happens
-      req.once('socket', function () {
-        var buf = new Buffer('HTTP/0.9 111\r\n' +
-                             'Foo: bar\r\n' +
-                             'Set-Cookie: 1\r\n' +
-                             'Set-Cookie: 2\r\n\r\n');
+      req.once('socket', function() {
+        var buf = new Buffer(
+          'HTTP/0.9 111\r\n' +
+            'Foo: bar\r\n' +
+            'Set-Cookie: 1\r\n' +
+            'Set-Cookie: 2\r\n\r\n'
+        );
         if ('function' == typeof stream.ondata) {
           // node <= v0.11.3
           stream.ondata(buf, 0, buf.length);
@@ -152,30 +161,30 @@ describe('Agent', function () {
   });
 });
 
-describe('"http" module', function () {
+describe('"http" module', function() {
   var server;
   var port;
 
   // setup test HTTP server
-  before(function (done) {
+  before(function(done) {
     server = http.createServer();
-    server.listen(0, function () {
+    server.listen(0, function() {
       port = server.address().port;
       done();
     });
   });
 
   // shut down test HTTP server
-  after(function (done) {
-    server.once('close', function () {
+  after(function(done) {
+    server.once('close', function() {
       done();
     });
     server.close();
   });
 
-  it('should work for basic HTTP requests', function (done) {
+  it('should work for basic HTTP requests', function(done) {
     var called = false;
-    var agent = new Agent(function (req, opts, fn) {
+    var agent = new Agent(function(req, opts, fn) {
       called = true;
       var socket = net.connect(opts);
       fn(null, socket);
@@ -183,7 +192,7 @@ describe('"http" module', function () {
 
     // add HTTP server "request" listener
     var gotReq = false;
-    server.once('request', function (req, res) {
+    server.once('request', function(req, res) {
       gotReq = true;
       res.setHeader('X-Foo', 'bar');
       res.setHeader('X-Url', req.url);
@@ -192,7 +201,7 @@ describe('"http" module', function () {
 
     var info = url.parse('http://127.0.0.1:' + port + '/foo');
     info.agent = agent;
-    http.get(info, function (res) {
+    http.get(info, function(res) {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
@@ -201,16 +210,16 @@ describe('"http" module', function () {
     });
   });
 
-  it('should support direct return in `connect()`', function (done) {
+  it('should support direct return in `connect()`', function(done) {
     var called = false;
-    var agent = new Agent(function (req, opts) {
+    var agent = new Agent(function(req, opts) {
       called = true;
       return net.connect(opts);
     });
 
     // add HTTP server "request" listener
     var gotReq = false;
-    server.once('request', function (req, res) {
+    server.once('request', function(req, res) {
       gotReq = true;
       res.setHeader('X-Foo', 'bar');
       res.setHeader('X-Url', req.url);
@@ -219,7 +228,7 @@ describe('"http" module', function () {
 
     var info = url.parse('http://127.0.0.1:' + port + '/foo');
     info.agent = agent;
-    http.get(info, function (res) {
+    http.get(info, function(res) {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
@@ -228,10 +237,10 @@ describe('"http" module', function () {
     });
   });
 
-  it('should support returning a Promise in `connect()`', function (done) {
+  it('should support returning a Promise in `connect()`', function(done) {
     var called = false;
-    var agent = new Agent(function (req, opts) {
-      return new Promise(function (resolve, reject) {
+    var agent = new Agent(function(req, opts) {
+      return new Promise(function(resolve, reject) {
         called = true;
         resolve(net.connect(opts));
       });
@@ -239,7 +248,7 @@ describe('"http" module', function () {
 
     // add HTTP server "request" listener
     var gotReq = false;
-    server.once('request', function (req, res) {
+    server.once('request', function(req, res) {
       gotReq = true;
       res.setHeader('X-Foo', 'bar');
       res.setHeader('X-Url', req.url);
@@ -248,7 +257,7 @@ describe('"http" module', function () {
 
     var info = url.parse('http://127.0.0.1:' + port + '/foo');
     info.agent = agent;
-    http.get(info, function (res) {
+    http.get(info, function(res) {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
@@ -257,9 +266,9 @@ describe('"http" module', function () {
     });
   });
 
-  it('should set the `Connection: close` response header', function (done) {
+  it('should set the `Connection: close` response header', function(done) {
     var called = false;
-    var agent = new Agent(function (req, opts, fn) {
+    var agent = new Agent(function(req, opts, fn) {
       called = true;
       var socket = net.connect(opts);
       fn(null, socket);
@@ -267,7 +276,7 @@ describe('"http" module', function () {
 
     // add HTTP server "request" listener
     var gotReq = false;
-    server.once('request', function (req, res) {
+    server.once('request', function(req, res) {
       gotReq = true;
       res.setHeader('X-Url', req.url);
       assert.equal('close', req.headers.connection);
@@ -276,7 +285,7 @@ describe('"http" module', function () {
 
     var info = url.parse('http://127.0.0.1:' + port + '/bar');
     info.agent = agent;
-    http.get(info, function (res) {
+    http.get(info, function(res) {
       assert.equal('/bar', res.headers['x-url']);
       assert.equal('close', res.headers.connection);
       assert(gotReq);
@@ -285,8 +294,8 @@ describe('"http" module', function () {
     });
   });
 
-  it('should pass through options from `http.request()`', function (done) {
-    var agent = new Agent(function (req, opts, fn) {
+  it('should pass through options from `http.request()`', function(done) {
+    var agent = new Agent(function(req, opts, fn) {
       assert.equal('google.com', opts.host);
       assert.equal('bar', opts.foo);
       done();
@@ -299,8 +308,8 @@ describe('"http" module', function () {
     });
   });
 
-  it('should default to port 80', function (done) {
-    var agent = new Agent(function (req, opts, fn) {
+  it('should default to port 80', function(done) {
+    var agent = new Agent(function(req, opts, fn) {
       assert.equal(80, opts.port);
       done();
     });
@@ -314,14 +323,17 @@ describe('"http" module', function () {
     });
   });
 
-  it('should support the "timeout" option', function (done) {
+  it('should support the "timeout" option', function(done) {
     // ensure we timeout after the "error" event had a chance to trigger
     this.timeout(1000);
     this.slow(800);
 
-    var agent = new Agent(function (req, opts, fn) {
-      // this function will time out
-    }, { timeout: 100 });
+    var agent = new Agent(
+      function(req, opts, fn) {
+        // this function will time out
+      },
+      { timeout: 100 }
+    );
 
     var opts = url.parse('http://nodejs.org');
     opts.agent = agent;
@@ -335,34 +347,34 @@ describe('"http" module', function () {
   });
 });
 
-describe('"https" module', function () {
+describe('"https" module', function() {
   var server;
   var port;
 
   // setup test HTTPS server
-  before(function (done) {
+  before(function(done) {
     var options = {
       key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
       cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
     };
     server = https.createServer(options);
-    server.listen(0, function () {
+    server.listen(0, function() {
       port = server.address().port;
       done();
     });
   });
 
   // shut down test HTTP server
-  after(function (done) {
-    server.once('close', function () {
+  after(function(done) {
+    server.once('close', function() {
       done();
     });
     server.close();
   });
 
-  it('should work for basic HTTPS requests', function (done) {
+  it('should work for basic HTTPS requests', function(done) {
     var called = false;
-    var agent = new Agent(function (req, opts, fn) {
+    var agent = new Agent(function(req, opts, fn) {
       called = true;
       assert(opts.secureEndpoint);
       var socket = tls.connect(opts);
@@ -371,7 +383,7 @@ describe('"https" module', function () {
 
     // add HTTPS server "request" listener
     var gotReq = false;
-    server.once('request', function (req, res) {
+    server.once('request', function(req, res) {
       gotReq = true;
       res.setHeader('X-Foo', 'bar');
       res.setHeader('X-Url', req.url);
@@ -381,7 +393,7 @@ describe('"https" module', function () {
     var info = url.parse('https://127.0.0.1:' + port + '/foo');
     info.agent = agent;
     info.rejectUnauthorized = false;
-    https.get(info, function (res) {
+    https.get(info, function(res) {
       assert.equal('bar', res.headers['x-foo']);
       assert.equal('/foo', res.headers['x-url']);
       assert(gotReq);
@@ -390,8 +402,8 @@ describe('"https" module', function () {
     });
   });
 
-  it('should pass through options from `https.request()`', function (done) {
-    var agent = new Agent(function (req, opts, fn) {
+  it('should pass through options from `https.request()`', function(done) {
+    var agent = new Agent(function(req, opts, fn) {
       assert.equal('google.com', opts.host);
       assert.equal('bar', opts.foo);
       done();
@@ -404,8 +416,8 @@ describe('"https" module', function () {
     });
   });
 
-  it('should default to port 443', function (done) {
-    var agent = new Agent(function (req, opts, fn) {
+  it('should default to port 443', function(done) {
+    var agent = new Agent(function(req, opts, fn) {
       assert.equal(true, opts.secureEndpoint);
       assert.equal(false, opts.rejectUnauthorized);
       assert.equal(443, opts.port);
@@ -423,39 +435,39 @@ describe('"https" module', function () {
   });
 });
 
-describe('"ws" server', function () {
+describe('"ws" server', function() {
   var wss;
   var server;
   var port;
 
   // setup test HTTP server
-  before(function (done) {
-    server = http.createServer()
+  before(function(done) {
+    server = http.createServer();
     wss = new WebSocket.Server({ server: server });
-    server.listen(0, function () {
+    server.listen(0, function() {
       port = server.address().port;
       done();
     });
   });
 
   // shut down test HTTP server
-  after(function (done) {
-    server.once('close', function () {
+  after(function(done) {
+    server.once('close', function() {
       done();
     });
     server.close();
   });
 
-  it('should work for basic WebSocket connections', function (done) {
+  it('should work for basic WebSocket connections', function(done) {
     function onconnection(ws) {
-      ws.on('message', function (data) {
+      ws.on('message', function(data) {
         assert.equal('ping', data);
         ws.send('pong');
       });
     }
     wss.on('connection', onconnection);
 
-    var agent = new Agent(function (req, opts, fn) {
+    var agent = new Agent(function(req, opts, fn) {
       var socket = net.connect(opts);
       fn(null, socket);
     });
@@ -464,57 +476,56 @@ describe('"ws" server', function () {
       agent: agent
     });
 
-    client.on('open', function () {
+    client.on('open', function() {
       client.send('ping');
     });
 
-    client.on('message', function (data) {
+    client.on('message', function(data) {
       assert.equal('pong', data);
       client.close();
       wss.removeListener('connection', onconnection);
       done();
     });
   });
-
 });
 
-describe('"wss" server', function () {
+describe('"wss" server', function() {
   var wss;
   var server;
   var port;
 
   // setup test HTTP server
-  before(function (done) {
+  before(function(done) {
     var options = {
       key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
       cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
     };
     server = https.createServer(options);
     wss = new WebSocket.Server({ server: server });
-    server.listen(0, function () {
+    server.listen(0, function() {
       port = server.address().port;
       done();
     });
   });
 
   // shut down test HTTP server
-  after(function (done) {
-    server.once('close', function () {
+  after(function(done) {
+    server.once('close', function() {
       done();
     });
     server.close();
   });
 
-  it('should work for secure WebSocket connections', function (done) {
+  it('should work for secure WebSocket connections', function(done) {
     function onconnection(ws) {
-      ws.on('message', function (data) {
+      ws.on('message', function(data) {
         assert.equal('ping', data);
         ws.send('pong');
       });
     }
     wss.on('connection', onconnection);
 
-    var agent = new Agent(function (req, opts, fn) {
+    var agent = new Agent(function(req, opts, fn) {
       var socket = tls.connect(opts);
       fn(null, socket);
     });
@@ -524,16 +535,15 @@ describe('"wss" server', function () {
       rejectUnauthorized: false
     });
 
-    client.on('open', function () {
+    client.on('open', function() {
       client.send('ping');
     });
 
-    client.on('message', function (data) {
+    client.on('message', function(data) {
       assert.equal('pong', data);
       client.close();
       wss.removeListener('connection', onconnection);
       done();
     });
   });
-
 });

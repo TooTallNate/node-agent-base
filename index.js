@@ -22,7 +22,7 @@ module.exports = Agent;
  * @api public
  */
 
-function Agent (callback, _opts) {
+function Agent(callback, _opts) {
   if (!(this instanceof Agent)) {
     return new Agent(callback, _opts);
   }
@@ -42,15 +42,17 @@ function Agent (callback, _opts) {
   }
 
   // timeout for the socket to be returned from the callback
-  this.timeout = opts && opts.timeout || null;
+  this.timeout = (opts && opts.timeout) || null;
 }
 inherits(Agent, EventEmitter);
 
 /**
  * Override this function in your subclass!
  */
-Agent.prototype.callback = function callback (req, opts) {
-  throw new Error('"agent-base" has no default implementation, you must subclass and override `callback()`');
+Agent.prototype.callback = function callback(req, opts) {
+  throw new Error(
+    '"agent-base" has no default implementation, you must subclass and override `callback()`'
+  );
 };
 
 /**
@@ -60,7 +62,12 @@ Agent.prototype.callback = function callback (req, opts) {
  * @api public
  */
 
-Agent.prototype.addRequest = function addRequest (req, host, port, localAddress) {
+Agent.prototype.addRequest = function addRequest(
+  req,
+  host,
+  port,
+  localAddress
+) {
   var opts;
   if ('object' == typeof host) {
     // >= v0.11.x API
@@ -104,7 +111,7 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
   var timedOut = false;
   var timeoutMs = this.timeout;
 
-  function onerror (err) {
+  function onerror(err) {
     if (req._hadError) return;
     req.emit('error', err);
     // For Safety. Some additional errors might fire later on
@@ -112,9 +119,11 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
     req._hadError = true;
   }
 
-  function ontimeout () {
+  function ontimeout() {
     timedOut = true;
-    var err = new Error('A "socket" was not created for HTTP request before ' + timeoutMs + 'ms');
+    var err = new Error(
+      'A "socket" was not created for HTTP request before ' + timeoutMs + 'ms'
+    );
     err.code = 'ETIMEOUT';
     onerror(err);
   }
@@ -125,14 +134,14 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
 
   try {
     Promise.resolve(this.callback(req, opts))
-      .then(function (socket) {
+      .then(function(socket) {
         if (timedOut) return;
         if (timeout != null) {
           clearTimeout(timeout);
         }
         req.onSocket(socket);
       })
-      .catch(function (err) {
+      .catch(function(err) {
         if (timedOut) return;
         if (timeout != null) {
           clearTimeout(timeout);
@@ -140,7 +149,7 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
         onerror(err);
       });
   } catch (err) {
-    process.nextTick(function () {
+    process.nextTick(function() {
       onerror(err);
     });
   }
