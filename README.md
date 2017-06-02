@@ -34,7 +34,7 @@ Example
 Here's a minimal example that creates a new `net.Socket` connection to the server
 for every HTTP request (i.e. the equivalent of `agent: false` option):
 
-``` js
+```js
 var net = require('net');
 var tls = require('tls');
 var url = require('url');
@@ -62,6 +62,16 @@ http.get(parsed, function (res) {
   res.pipe(process.stdout);
 });
 ```
+
+You can also return a Promise or use an `async` function:
+
+```js
+agent(async function (req, opts) {
+  await sleep(1000);
+  // etc…
+});
+```
+
 
 API
 ---
