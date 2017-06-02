@@ -1,4 +1,14 @@
 
+3.0.0 / 2017-06-02
+==================
+
+  * drop support for Node.js v0.8 and v0.10
+  * add support for async, Promises, and direct return
+  * add a couple `options` test cases
+  * implement a `"timeout"` option
+  * rename main file to `index.js`
+  * test Node 8 on Travis
+
 2.1.1 / 2017-05-30
 ==================
 
