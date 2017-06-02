@@ -245,6 +245,26 @@ describe('"http" module', function () {
       agent: agent
     });
   });
+
+  it('should support the "timeout" option', function (done) {
+    // ensure we timeout after the "error" event had a chance to trigger
+    this.timeout(1000);
+    this.slow(800);
+
+    var agent = new Agent(function (req, opts, fn) {
+      // this function will time out
+    }, { timeout: 100 });
+
+    var opts = url.parse('http://nodejs.org');
+    opts.agent = agent;
+
+    var req = http.get(opts);
+    req.once('error', function(err) {
+      assert.equal('ETIMEOUT', err.code);
+      req.abort();
+      done();
+    });
+  });
 });
 
 describe('"https" module', function () {

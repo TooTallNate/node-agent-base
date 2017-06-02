@@ -66,12 +66,16 @@ http.get(opts, function (res) {
 API
 ---
 
-## Agent(Function callback) → http.Agent
+## Agent(Function callback[, Object options]) → http.Agent
 
 Creates a base `http.Agent` that will execute the callback function `callback`
 for every HTTP request that it is used as the `agent` for. The callback function
 is responsible for creating a `stream.Duplex` instance of some kind that will be
 used as the underlying socket in the HTTP request.
+
+The `options` object accepts the following properties:
+
+  * `timeout` - Number - Timeout for the `callback()` function in milliseconds. Defaults to Infinity (optional).
 
 The callback function should have the following signature:
 

@@ -22,12 +22,22 @@ module.exports = Agent;
  * @api public
  */
 
-function Agent (callback) {
-  if (!(this instanceof Agent)) return new Agent(callback);
+function Agent (callback, _opts) {
+  if (!(this instanceof Agent)) {
+    return new Agent(callback, opts);
+  }
+
   EventEmitter.call(this);
+
+  var opts = _opts;
   if ('function' === typeof callback) {
     this.callback = callback;
+  } else if (callback) {
+    opts = callback;
   }
+
+  // timeout for the socket to be returned from the callback
+  this.timeout = opts && opts.timeout || null
 }
 inherits(Agent, EventEmitter);
 
@@ -81,22 +91,47 @@ Agent.prototype.addRequest = function addRequest (req, host, port, localAddress)
   // clean up a bit of memory since we're no longer using this
   req._options = null;
 
-  // create the `net.Socket` instance
+  // create the `stream.Duplex` instance
+  var timeout;
+  var timedOut = false;
+  var timeoutMs = this.timeout;
+
+  function onerror (err) {
+    req.emit('error', err);
+    // For Safety. Some additional errors might fire later on
+    // and we need to make sure we don't double-fire the error event.
+    req._hadError = true;
+  }
+
+  function ontimeout () {
+    timedOut = true;
+    var err = new Error('A "socket" was not created for HTTP request before ' + timeoutMs + 'ms');
+    err.code = 'ETIMEOUT';
+    onerror(err);
+  }
+
+  if (timeoutMs > 0) {
+    timeout = setTimeout(ontimeout, timeoutMs);
+  }
+
+
   var sync = true;
   this.callback(req, opts, function (err, socket) {
-    function emitErr () {
-      req.emit('error', err);
-      // For Safety. Some additional errors might fire later on
-      // and we need to make sure we don't double-fire the error event.
-      req._hadError = true;
+    if (timedOut) {
+      return;
+    } else if (timeout != null) {
+      clearTimeout(timeout);
     }
+
     if (err) {
       if (sync) {
         // need to defer the "error" event, when sync, because by now the `req`
-        // instance hasn't event been passed back to the user yet...
-        process.nextTick(emitErr);
+        // instance hasn't even been passed back to the user yet...
+        process.nextTick(function () {
+          onerror(err);
+        });
       } else {
-        emitErr();
+        onerror(err);
       }
     } else {
       req.onSocket(socket);
