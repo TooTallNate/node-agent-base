@@ -36,7 +36,7 @@ function Agent (callback, _opts) {
   }
 
   // timeout for the socket to be returned from the callback
-  this.timeout = opts && opts.timeout || null
+  this.timeout = opts && opts.timeout || null;
 }
 inherits(Agent, EventEmitter);
 
