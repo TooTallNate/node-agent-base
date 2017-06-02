@@ -1,6 +1,6 @@
 agent-base
 ==========
-### Turn a function into an `http.Agent` instance
+### Turn a function into an [`http.Agent`][http.Agent] instance
 [![Build Status](https://travis-ci.org/TooTallNate/node-agent-base.svg?branch=master)](https://travis-ci.org/TooTallNate/node-agent-base)
 
 This module provides an `http.Agent` generator. That is, you pass it an async
@@ -42,10 +42,10 @@ var http = require('http');
 var agent = require('agent-base');
 
 var endpoint = 'http://nodejs.org/api/';
-var opts = url.parse(endpoint);
+var parsed = url.parse(endpoint);
 
 // This is the important part!
-opts.agent = agent(function (req, opts, fn) {
+parsed.agent = agent(function (req, opts, fn) {
   var socket;
   // `secureEndpoint` is true when using the https module
   if (opts.secureEndpoint) {
@@ -57,7 +57,7 @@ opts.agent = agent(function (req, opts, fn) {
 });
 
 // Everything else works just like normal...
-http.get(opts, function (res) {
+http.get(parsed, function (res) {
   console.log('"response" event!', res.headers);
   res.pipe(process.stdout);
 });
@@ -66,7 +66,7 @@ http.get(opts, function (res) {
 API
 ---
 
-## Agent(Function callback[, Object options]) → http.Agent
+## Agent(Function callback[, Object options]) → [http.Agent][]
 
 Creates a base `http.Agent` that will execute the callback function `callback`
 for every HTTP request that it is used as the `agent` for. The callback function
@@ -90,7 +90,7 @@ the callback function `cb` once created, and the HTTP request will
 continue to proceed.
 
 If the `https` module is used to invoke the HTTP request, then the
-`secureEndpoint` property on `options` will be set to `true`.
+`secureEndpoint` property on `options` _will be set to `true`_.
 
 
 License
@@ -123,3 +123,4 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 [https-proxy-agent]: https://github.com/TooTallNate/node-https-proxy-agent
 [pac-proxy-agent]: https://github.com/TooTallNate/node-pac-proxy-agent
 [socks-proxy-agent]: https://github.com/TooTallNate/node-socks-proxy-agent
+[http.Agent]: https://nodejs.org/api/http.html#http_class_http_agent
