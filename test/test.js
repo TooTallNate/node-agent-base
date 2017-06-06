@@ -12,7 +12,6 @@ var WebSocket = require('ws');
 var assert = require('assert');
 var events = require('events');
 var inherits = require('util').inherits;
-var semver = require('semver');
 var Agent = require('../');
 
 describe('Agent', function() {
