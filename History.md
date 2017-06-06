@@ -1,4 +1,17 @@
 
+4.0.0 / 2017-06-06
+==================
+
+  * drop support for Node.js < 4
+  * drop old versions of Node.js from Travis-CI
+  * specify Node.js >= 4.0.0 in `engines.node`
+  * remove more old code
+  * remove "extend" dependency
+  * remove "semver" dependency
+  * make the Promise logic a bit cleaner
+  * add async function pseudo-example to README
+  * use direct return in README example
+
 3.0.0 / 2017-06-02
 ==================
 
