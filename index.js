@@ -128,29 +128,31 @@ Agent.prototype.addRequest = function addRequest(
     onerror(err);
   }
 
+  function callbackError(err) {
+    if (timedOut) return;
+    if (timeout != null) {
+      clearTimeout(timeout);
+    }
+    onerror(err);
+  }
+
+  function onsocket(socket) {
+    if (timedOut) return;
+    if (timeout != null) {
+      clearTimeout(timeout);
+    }
+    req.onSocket(socket);
+  }
+
   if (timeoutMs > 0) {
     timeout = setTimeout(ontimeout, timeoutMs);
   }
 
   try {
     Promise.resolve(this.callback(req, opts))
-      .then(function(socket) {
-        if (timedOut) return;
-        if (timeout != null) {
-          clearTimeout(timeout);
-        }
-        req.onSocket(socket);
-      })
-      .catch(function(err) {
-        if (timedOut) return;
-        if (timeout != null) {
-          clearTimeout(timeout);
-        }
-        onerror(err);
-      });
+      .then(onsocket, callbackError);
   } catch (err) {
-    process.nextTick(function() {
-      onerror(err);
-    });
+    Promise.reject(err)
+      .catch(callbackError);
   }
 };
