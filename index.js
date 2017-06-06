@@ -1,12 +1,14 @@
+'use strict';
+
 /**
  * Module dependencies.
  */
 
 require('./patch-core');
-var extend = require('extend');
-var inherits = require('util').inherits;
-var promisify = require('es6-promisify');
-var EventEmitter = require('events').EventEmitter;
+const extend = require('extend');
+const inherits = require('util').inherits;
+const promisify = require('es6-promisify');
+const EventEmitter = require('events').EventEmitter;
 
 /**
  * Module exports.
@@ -29,7 +31,7 @@ function Agent(callback, _opts) {
 
   EventEmitter.call(this);
 
-  var opts = _opts;
+  let opts = _opts;
   if ('function' === typeof callback) {
     this.callback = callback;
   } else if (callback) {
@@ -64,21 +66,9 @@ Agent.prototype.callback = function callback(req, opts) {
 
 Agent.prototype.addRequest = function addRequest(
   req,
-  host,
-  port,
-  localAddress
+  _opts
 ) {
-  var opts;
-  if ('object' == typeof host) {
-    // >= v0.11.x API
-    opts = extend({}, req._options, host);
-  } else {
-    // <= v0.10.x API
-    opts = extend({}, req._options, { host: host, port: port });
-    if (null != localAddress) {
-      opts.localAddress = localAddress;
-    }
-  }
+  const opts = extend({}, req._options, _opts);
 
   if (opts.host && opts.path) {
     // if both a `host` and `path` are specified then it's most likely the
@@ -87,7 +77,7 @@ Agent.prototype.addRequest = function addRequest(
     delete opts.path;
   }
 
-  // set default `port` if none was explicitly specified
+  // set default `port` for HTTP if none was explicitly specified
   if (null == opts.port) {
     opts.port = opts.secureEndpoint ? 443 : 80;
   }
@@ -107,9 +97,9 @@ Agent.prototype.addRequest = function addRequest(
   req._options = null;
 
   // create the `stream.Duplex` instance
-  var timeout;
-  var timedOut = false;
-  var timeoutMs = this.timeout;
+  let timeout;
+  let timedOut = false;
+  const timeoutMs = this.timeout;
 
   function onerror(err) {
     if (req._hadError) return;
@@ -121,7 +111,7 @@ Agent.prototype.addRequest = function addRequest(
 
   function ontimeout() {
     timedOut = true;
-    var err = new Error(
+    const err = new Error(
       'A "socket" was not created for HTTP request before ' + timeoutMs + 'ms'
     );
     err.code = 'ETIMEOUT';
