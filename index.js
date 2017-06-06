@@ -5,7 +5,6 @@
  */
 
 require('./patch-core');
-const extend = require('extend');
 const inherits = require('util').inherits;
 const promisify = require('es6-promisify');
 const EventEmitter = require('events').EventEmitter;
