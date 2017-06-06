@@ -68,7 +68,7 @@ Agent.prototype.addRequest = function addRequest(
   req,
   _opts
 ) {
-  const opts = extend({}, req._options, _opts);
+  const opts = Object.assign({}, _opts);
 
   if (opts.host && opts.path) {
     // if both a `host` and `path` are specified then it's most likely the
@@ -92,9 +92,6 @@ Agent.prototype.addRequest = function addRequest(
   // XXX: non-documented `http` module API :(
   req._last = true;
   req.shouldKeepAlive = false;
-
-  // clean up a bit of memory since we're no longer using this
-  req._options = null;
 
   // create the `stream.Duplex` instance
   let timeout;
