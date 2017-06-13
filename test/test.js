@@ -44,6 +44,28 @@ describe('Agent', function() {
       assert.equal(1000, agent.timeout);
     });
   });
+  describe('`this` context', function() {
+    it('should be the Agent instance', function(done) {
+      var agent = new Agent();
+      agent.callback = function () {
+        assert.equal(this, agent);
+        done();
+      }
+      var info = url.parse('http://127.0.0.1/foo');
+      info.agent = agent;
+      http.get(info);
+    })
+    it('should be the Agent instance with callback signature', function(done) {
+      var agent = new Agent();
+      agent.callback = function (req, opts, fn) {
+        assert.equal(this, agent);
+        done();
+      }
+      var info = url.parse('http://127.0.0.1/foo');
+      info.agent = agent;
+      http.get(info);
+    })
+  })
   describe('"error" event', function() {
     it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function(
       done

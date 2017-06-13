@@ -37,11 +37,6 @@ function Agent(callback, _opts) {
     opts = callback;
   }
 
-  if (this.callback.length >= 3) {
-    // legacy callback function, convert to Promise
-    this.callback = promisify(this.callback);
-  }
-
   // timeout for the socket to be returned from the callback
   this.timeout = (opts && opts.timeout) || null;
 }
@@ -128,6 +123,11 @@ Agent.prototype.addRequest = function addRequest(
       clearTimeout(timeout);
     }
     req.onSocket(socket);
+  }
+
+  if (this.callback.length >= 3) {
+    // legacy callback function, convert to Promise
+    this.callback = promisify(this.callback, this);
   }
 
   if (timeoutMs > 0) {
