@@ -1,7 +1,6 @@
 'use strict';
 
 const url = require('url');
-const http = require('http');
 const https = require('https');
 
 /**
@@ -11,9 +10,12 @@ const https = require('https');
  * There is currently no PR attempting to move this property upstream.
  */
 https.request = (function(request) {
-  return function(options, cb) {
+  return function(_options, cb) {
+    let options
     if (typeof options === 'string') {
-      options = url.parse(options);
+      options = url.parse(_options);
+    } else {
+      options = Object.assign({}, _options);
     }
     if (null == options.port) {
       options.port = 443;

@@ -393,6 +393,23 @@ describe('"https" module', function() {
     server.close();
   });
 
+
+  it('should not modify the passed in Options object', function(done) {
+    var called = false;
+    var agent = new Agent(function(req, opts, fn) {
+      called = true;
+      assert.equal(true, opts.secureEndpoint);
+      assert.equal(443, opts.port);
+      assert.equal('localhost', opts.host);
+    });
+    var opts = { agent: agent };
+    var req = https.request(opts);
+    assert.equal(true, called);
+    assert.equal(false, 'secureEndpoint' in opts);
+    assert.equal(false, 'port' in opts);
+    done();
+  });
+
   it('should work for basic HTTPS requests', function(done) {
     var called = false;
     var agent = new Agent(function(req, opts, fn) {
