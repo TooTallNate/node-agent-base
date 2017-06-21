@@ -122,7 +122,12 @@ Agent.prototype.addRequest = function addRequest(
     if (timeout != null) {
       clearTimeout(timeout);
     }
-    req.onSocket(socket);
+    if (socket) {
+      req.onSocket(socket);
+    } else {
+      const err = new Error(`no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``);
+      onerror(err);
+    }
   }
 
   if (this.callback.length >= 3) {

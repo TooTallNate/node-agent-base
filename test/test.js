@@ -46,24 +46,35 @@ describe('Agent', function() {
   });
   describe('`this` context', function() {
     it('should be the Agent instance', function(done) {
+      var called = false;
       var agent = new Agent();
       agent.callback = function () {
+        called = true;
         assert.equal(this, agent);
-        done();
       }
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
-      http.get(info);
+      var req = http.get(info);
+      req.on('error', function(err) {
+        assert(/no Duplex stream was returned/.test(err.message));
+        done();
+      });
     })
     it('should be the Agent instance with callback signature', function(done) {
+      var called = false;
       var agent = new Agent();
       agent.callback = function (req, opts, fn) {
+        called = true;
         assert.equal(this, agent);
-        done();
+        fn();
       }
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
-      http.get(info);
+      var req = http.get(info);
+      req.on('error', function(err) {
+        assert(/no Duplex stream was returned/.test(err.message));
+        done();
+      });
     })
   })
   describe('"error" event', function() {
