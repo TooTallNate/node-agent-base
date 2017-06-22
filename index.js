@@ -39,6 +39,8 @@ function Agent(callback, _opts) {
 
   // timeout for the socket to be returned from the callback
   this.timeout = (opts && opts.timeout) || null;
+
+  this.options = opts;
 }
 inherits(Agent, EventEmitter);
 
@@ -62,18 +64,25 @@ Agent.prototype.addRequest = function addRequest(
   req,
   _opts
 ) {
-  const opts = Object.assign({}, _opts);
+  const ownOpts = Object.assign({}, _opts);
+
+  // set default `host` for HTTP to localhost
+  if (null == ownOpts.host) {
+    ownOpts.host = 'localhost';
+  }
+
+  // set default `port` for HTTP if none was explicitly specified
+  if (null == ownOpts.port) {
+    ownOpts.port = ownOpts.secureEndpoint ? 443 : 80;
+  }
+
+  const opts = Object.assign({}, this.options, ownOpts);
 
   if (opts.host && opts.path) {
     // if both a `host` and `path` are specified then it's most likely the
     // result of a `url.parse()` call... we need to remove the `path` portion so
     // that `net.connect()` doesn't attempt to open that as a unix socket file.
     delete opts.path;
-  }
-
-  // set default `port` for HTTP if none was explicitly specified
-  if (null == opts.port) {
-    opts.port = opts.secureEndpoint ? 443 : 80;
   }
 
   delete opts.agent;

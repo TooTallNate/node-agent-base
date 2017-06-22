@@ -43,6 +43,28 @@ describe('Agent', function() {
       var agent = new Agent(function() {}, { timeout: 1000 });
       assert.equal(1000, agent.timeout);
     });
+    it('should be mixed in with HTTP request options', function(done) {
+      var agent = new Agent({
+        host: 'my-proxy.com',
+        port: 3128,
+        foo: 'bar'
+      });
+      agent.callback = function(req, opts, fn) {
+        assert.equal('bar', opts.foo);
+        assert.equal('a', opts.b);
+
+        // `host` and `port` are special-cases, and should always be
+        // overwritten in the request `opts` inside the agent-base callback
+        assert.equal('localhost', opts.host);
+        assert.equal(80, opts.port);
+        done();
+      };
+      var opts = {
+        b: 'a',
+        agent: agent
+      };
+      http.get(opts);
+    });
   });
   describe('`this` context', function() {
     it('should be the Agent instance', function(done) {
