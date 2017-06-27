@@ -1,4 +1,11 @@
 
+4.1.0 / 2017-06-26
+==================
+
+  * mix in Agent options into Request options
+  * throw when nothing is returned from agent-base callback
+  * do not modify the options object for https requests
+
 4.0.1 / 2017-06-13
 ==================
 
