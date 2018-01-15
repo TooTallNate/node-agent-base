@@ -112,6 +112,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
     if (timedOut) return;
     if (timeout != null) {
       clearTimeout(timeout);
+      timeout = null;
     }
     onerror(err);
   }
@@ -120,6 +121,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
     if (timedOut) return;
     if (timeout != null) {
       clearTimeout(timeout);
+      timeout = null;
     }
     if (socket) {
       req.onSocket(socket);
