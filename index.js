@@ -1,16 +1,8 @@
 'use strict';
-/**
- * Module dependencies.
- */
-
 require('./patch-core');
 const inherits = require('util').inherits;
 const promisify = require('es6-promisify');
 const EventEmitter = require('events').EventEmitter;
-
-/**
- * Module exports.
- */
 
 module.exports = Agent;
 
@@ -21,7 +13,6 @@ module.exports = Agent;
  * @param {Function} callback
  * @api public
  */
-
 function Agent(callback, _opts) {
   if (!(this instanceof Agent)) {
     return new Agent(callback, _opts);
@@ -58,16 +49,15 @@ Agent.prototype.callback = function callback(req, opts) {
  *
  * @api public
  */
-
 Agent.prototype.addRequest = function addRequest(req, _opts) {
   const ownOpts = Object.assign({}, _opts);
 
-  // set default `host` for HTTP to localhost
+  // Set default `host` for HTTP to localhost
   if (null == ownOpts.host) {
     ownOpts.host = 'localhost';
   }
 
-  // set default `port` for HTTP if none was explicitly specified
+  // Set default `port` for HTTP if none was explicitly specified
   if (null == ownOpts.port) {
     ownOpts.port = ownOpts.secureEndpoint ? 443 : 80;
   }
@@ -75,7 +65,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
   const opts = Object.assign({}, this.options, ownOpts);
 
   if (opts.host && opts.path) {
-    // if both a `host` and `path` are specified then it's most likely the
+    // If both a `host` and `path` are specified then it's most likely the
     // result of a `url.parse()` call... we need to remove the `path` portion so
     // that `net.connect()` doesn't attempt to open that as a unix socket file.
     delete opts.path;
@@ -87,12 +77,12 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
   delete opts.defaultPort;
   delete opts.createConnection;
 
-  // hint to use "Connection: close"
+  // Hint to use "Connection: close"
   // XXX: non-documented `http` module API :(
   req._last = true;
   req.shouldKeepAlive = false;
 
-  // create the `stream.Duplex` instance
+  // Create the `stream.Duplex` instance
   let timeout;
   let timedOut = false;
   const timeoutMs = this.timeout;
@@ -138,7 +128,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
   }
 
   if (this.callback.length >= 3) {
-    // legacy callback function, convert to Promise
+    // Legacy callback function, convert to Promise
     this.callback = promisify(this.callback, this);
   }
 
