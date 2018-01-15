@@ -70,10 +70,10 @@ describe('Agent', function() {
     it('should be the Agent instance', function(done) {
       var called = false;
       var agent = new Agent();
-      agent.callback = function () {
+      agent.callback = function() {
         called = true;
         assert.equal(this, agent);
-      }
+      };
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
       var req = http.get(info);
@@ -81,15 +81,15 @@ describe('Agent', function() {
         assert(/no Duplex stream was returned/.test(err.message));
         done();
       });
-    })
+    });
     it('should be the Agent instance with callback signature', function(done) {
       var called = false;
       var agent = new Agent();
-      agent.callback = function (req, opts, fn) {
+      agent.callback = function(req, opts, fn) {
         called = true;
         assert.equal(this, agent);
         fn();
-      }
+      };
       var info = url.parse('http://127.0.0.1/foo');
       info.agent = agent;
       var req = http.get(info);
@@ -97,8 +97,8 @@ describe('Agent', function() {
         assert(/no Duplex stream was returned/.test(err.message));
         done();
       });
-    })
-  })
+    });
+  });
   describe('"error" event', function() {
     it('should be invoked on `http.ClientRequest` instance if `callback()` has not been defined', function(
       done
@@ -419,7 +419,6 @@ describe('"https" module', function() {
     });
     server.close();
   });
-
 
   it('should not modify the passed in Options object', function(done) {
     var called = false;
