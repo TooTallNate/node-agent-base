@@ -20,6 +20,10 @@ function Agent(callback, _opts) {
 
   EventEmitter.call(this);
 
+  // The callback gets promisified if it has 3 parameters
+  // (i.e. it has a callback function) lazily
+  this._promisifiedCallback = false;
+
   let opts = _opts;
   if ('function' === typeof callback) {
     this.callback = callback;
@@ -127,9 +131,10 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
     }
   }
 
-  if (this.callback.length >= 3) {
-    // Legacy callback function, convert to Promise
+  if (!this._promisifiedCallback && this.callback.length >= 3) {
+    // Legacy callback function - convert to a Promise
     this.callback = promisify(this.callback, this);
+    this._promisifiedCallback = true;
   }
 
   if (timeoutMs > 0) {
