@@ -100,6 +100,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
   }
 
   function ontimeout() {
+    timeout = null;
     timedOut = true;
     const err = new Error(
       'A "socket" was not created for HTTP request before ' + timeoutMs + 'ms'
