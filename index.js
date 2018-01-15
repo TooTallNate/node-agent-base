@@ -6,6 +6,10 @@ const EventEmitter = require('events').EventEmitter;
 
 module.exports = Agent;
 
+function isAgent(v) {
+  return v && typeof v.addRequest === 'function';
+}
+
 /**
  * Base `http.Agent` implementation.
  * No pooling/keep-alive is implemented by default.
@@ -124,7 +128,11 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
       clearTimeout(timeout);
       timeout = null;
     }
-    if (socket) {
+    if (isAgent(socket)) {
+      // `socket` is actually an http.Agent instance, so relinquish
+      // responsibility for this `req` to the Agent from here on
+      socket.addRequest(req, opts);
+    } else if (socket) {
       req.onSocket(socket);
     } else {
       const err = new Error(

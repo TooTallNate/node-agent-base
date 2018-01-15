@@ -14,6 +14,10 @@ var events = require('events');
 var inherits = require('util').inherits;
 var Agent = require('../');
 
+var PassthroughAgent = Agent(function(req, opts) {
+  return opts.secureEndpoint ? https.globalAgent : http.globalAgent;
+});
+
 describe('Agent', function() {
   describe('subclass', function() {
     it('should be subclassable', function(done) {
@@ -393,6 +397,28 @@ describe('"http" module', function() {
       done();
     });
   });
+
+  describe('PassthroughAgent', function() {
+    it('should pass through to `http.globalAgent`', function(done) {
+      // add HTTP server "request" listener
+      var gotReq = false;
+      server.once('request', function(req, res) {
+        gotReq = true;
+        res.setHeader('X-Foo', 'bar');
+        res.setHeader('X-Url', req.url);
+        res.end();
+      });
+
+      var info = url.parse('http://127.0.0.1:' + port + '/foo');
+      info.agent = PassthroughAgent;
+      http.get(info, function(res) {
+        assert.equal('bar', res.headers['x-foo']);
+        assert.equal('/foo', res.headers['x-url']);
+        assert(gotReq);
+        done();
+      });
+    });
+  });
 });
 
 describe('"https" module', function() {
@@ -506,6 +532,29 @@ describe('"https" module', function() {
       path: '/foo',
       agent: agent,
       rejectUnauthorized: false
+    });
+  });
+
+  describe('PassthroughAgent', function() {
+    it('should pass through to `https.globalAgent`', function(done) {
+      // add HTTP server "request" listener
+      var gotReq = false;
+      server.once('request', function(req, res) {
+        gotReq = true;
+        res.setHeader('X-Foo', 'bar');
+        res.setHeader('X-Url', req.url);
+        res.end();
+      });
+
+      var info = url.parse('https://127.0.0.1:' + port + '/foo');
+      info.agent = PassthroughAgent;
+      info.rejectUnauthorized = false;
+      https.get(info, function(res) {
+        assert.equal('bar', res.headers['x-foo']);
+        assert.equal('/foo', res.headers['x-url']);
+        assert(gotReq);
+        done();
+      });
     });
   });
 });
