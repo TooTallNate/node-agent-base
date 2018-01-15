@@ -201,13 +201,7 @@ describe('Agent', function() {
             'Set-Cookie: 1\r\n' +
             'Set-Cookie: 2\r\n\r\n'
         );
-        if ('function' == typeof stream.ondata) {
-          // node <= v0.11.3
-          stream.ondata(buf, 0, buf.length);
-        } else {
-          // node > v0.11.3
-          stream.emit('data', buf);
-        }
+        stream.emit('data', buf);
       });
 
       req.end();
