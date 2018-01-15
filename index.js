@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * Module dependencies.
  */
@@ -60,10 +59,7 @@ Agent.prototype.callback = function callback(req, opts) {
  * @api public
  */
 
-Agent.prototype.addRequest = function addRequest(
-  req,
-  _opts
-) {
+Agent.prototype.addRequest = function addRequest(req, _opts) {
   const ownOpts = Object.assign({}, _opts);
 
   // set default `host` for HTTP to localhost
@@ -134,7 +130,9 @@ Agent.prototype.addRequest = function addRequest(
     if (socket) {
       req.onSocket(socket);
     } else {
-      const err = new Error(`no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``);
+      const err = new Error(
+        `no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``
+      );
       onerror(err);
     }
   }
@@ -149,10 +147,8 @@ Agent.prototype.addRequest = function addRequest(
   }
 
   try {
-    Promise.resolve(this.callback(req, opts))
-      .then(onsocket, callbackError);
+    Promise.resolve(this.callback(req, opts)).then(onsocket, callbackError);
   } catch (err) {
-    Promise.reject(err)
-      .catch(callbackError);
+    Promise.reject(err).catch(callbackError);
   }
 };
