@@ -136,7 +136,7 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
       req.onSocket(socket);
     } else {
       const err = new Error(
-        `no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``
+        'no Duplex stream was returned to agent-base for `' + req.method + ' ' + req.path + '`'
       );
       onerror(err);
     }
