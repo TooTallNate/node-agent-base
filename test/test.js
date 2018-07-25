@@ -189,9 +189,10 @@ describe('Agent', function() {
         })
       };
       var req = http.request(opts, function(res) {
-        assert.equal('0.9', res.httpVersion);
-        assert.equal(111, res.statusCode);
+        assert.equal('1.0', res.httpVersion);
+        assert.equal(200, res.statusCode);
         assert.equal('bar', res.headers.foo);
+        assert.deepEqual(['1', '2'], res.headers['set-cookie']);
         done();
       });
 
@@ -199,8 +200,8 @@ describe('Agent', function() {
       // doesn't *actually* attach the listeners to the "stream" until
       // this happens
       req.once('socket', function() {
-        var buf = new Buffer(
-          'HTTP/0.9 111\r\n' +
+        var buf = Buffer.from(
+          'HTTP/1.0 200\r\n' +
             'Foo: bar\r\n' +
             'Set-Cookie: 1\r\n' +
             'Set-Cookie: 2\r\n\r\n'
