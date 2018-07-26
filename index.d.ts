@@ -4,9 +4,8 @@
 
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import './patch-core';
 
-declare type AgentCallback = (
+type AgentCallback = (
 	req?: any,
 	opts?: {
 		secureEndpoint: boolean;
@@ -20,7 +19,7 @@ interface AgentOptions {
 	[key: string]: any;
 }
 
-interface IAgent extends EventEmitter {
+interface Agent extends EventEmitter {
 	_promisifiedCallback: boolean;
 	timeout: number | null;
 	options?: AgentOptions;
@@ -33,7 +32,7 @@ interface IAgent extends EventEmitter {
  * Base `http.Agent` implementation.
  * No pooling/keep-alive is implemented by default.
  */
-declare function Agent(opts?: AgentOptions): IAgent;
-declare function Agent(callback: AgentCallback, opts?: AgentOptions): IAgent;
+declare function agent(opts?: AgentOptions): Agent;
+declare function agent(callback: AgentCallback, opts?: AgentOptions): Agent;
 
-export = Agent;
+export = agent;
