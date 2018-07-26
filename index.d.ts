@@ -5,21 +5,21 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 
-type AgentCallback = (
+export type AgentCallback = (
 	req?: any,
 	opts?: {
 		secureEndpoint: boolean;
 	}
 ) => void;
 
-interface AgentOptions {
+export interface AgentOptions {
 	timeout?: number;
 	host?: string;
 	port?: number;
 	[key: string]: any;
 }
 
-interface Agent extends EventEmitter {
+export interface Agent extends EventEmitter {
 	_promisifiedCallback: boolean;
 	timeout: number | null;
 	options?: AgentOptions;
