@@ -30,7 +30,17 @@ https.request = (function(request) {
  *
  * Ref: https://github.com/nodejs/node/commit/5118f31
  */
-https.get = function(options, cb) {
+https.get = function (_url, _options, cb) {
+    let options;
+    if (typeof _url === 'string' && _options && typeof _options !== 'function') {
+      options = Object.assign({}, url.parse(_url), _options);
+    } else if (!_options && !cb) {
+      options = _url;
+    } else if (!cb) {
+      options = _url;
+      cb = _options;
+    }
+
   const req = https.request(options, cb);
   req.end();
   return req;

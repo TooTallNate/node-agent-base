@@ -542,6 +542,25 @@ describe('"https" module', function() {
     });
   });
 
+  it('should support the 3-argument `https.get()`', function(done) {
+    var agent = new Agent(function(req, opts, fn) {
+      assert.equal('google.com', opts.host);
+      assert.equal('/q', opts.pathname || opts.path);
+      assert.equal('881', opts.port);
+      assert.equal('bar', opts.foo);
+      done();
+    });
+
+    https.get(
+      'https://google.com:881/q',
+      {
+        host: 'google.com',
+        foo: 'bar',
+        agent: agent
+      }
+    );
+  });
+
   it('should default to port 443', function(done) {
     var agent = new Agent(function(req, opts, fn) {
       assert.equal(true, opts.secureEndpoint);
