@@ -8,21 +8,25 @@ const https = require('https');
  *
  * There is currently no PR attempting to move this property upstream.
  */
-https.request = (function(request) {
-  return function(_options, cb) {
-    let options;
-    if (typeof _options === 'string') {
-      options = url.parse(_options);
-    } else {
-      options = Object.assign({}, _options);
-    }
-    if (null == options.port) {
-      options.port = 443;
-    }
-    options.secureEndpoint = true;
-    return request.call(https, options, cb);
-  };
-})(https.request);
+const patchMarker = "__agent_base_https_request_patched__";
+if (!https.request[patchMarker]) {
+  https.request = (function(request) {
+    return function(_options, cb) {
+      let options;
+      if (typeof _options === 'string') {
+        options = url.parse(_options);
+      } else {
+        options = Object.assign({}, _options);
+      }
+      if (null == options.port) {
+        options.port = 443;
+      }
+      options.secureEndpoint = true;
+      return request.call(https, options, cb);
+    };
+  })(https.request);
+  https.request[patchMarker] = true;
+}
 
 /**
  * This is needed for Node.js >= 9.0.0 to make sure `https.get()` uses the

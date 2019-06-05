@@ -560,6 +560,17 @@ describe('"https" module', function() {
     });
   });
 
+  it('should not re-patch https.request', () => {
+    var patchModulePath = "../patch-core";
+    var patchedRequest = https.request;
+
+    delete require.cache[require.resolve(patchModulePath)];
+    require(patchModulePath);
+
+    assert.equal(patchedRequest, https.request);
+    assert.equal(true, https.request.__agent_base_https_request_patched__);
+  });
+
   describe('PassthroughAgent', function() {
     it('should pass through to `https.globalAgent`', function(done) {
       // add HTTP server "request" listener
