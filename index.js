@@ -10,6 +10,20 @@ function isAgent(v) {
   return v && typeof v.addRequest === 'function';
 }
 
+function urlInstanceToObject(url) {
+  let urlObject = {};
+  // If the opts are genearted with the WHATWG API
+  if (url && Object.getOwnPropertySymbols(url)[0]) {
+    let urlContext = url[Object.getOwnPropertySymbols(url)[0]];
+    for (let key of Object.keys(urlContext)) {
+      urlObject[key] = urlContext[key];
+    }
+  } else {
+    urlObject = Object.assign({}, url);
+  }
+  return urlObject;
+}
+
 /**
  * Base `http.Agent` implementation.
  * No pooling/keep-alive is implemented by default.
@@ -18,6 +32,8 @@ function isAgent(v) {
  * @api public
  */
 function Agent(callback, _opts) {
+  _opts = urlInstanceToObject(_opts);
+
   if (!(this instanceof Agent)) {
     return new Agent(callback, _opts);
   }
@@ -58,7 +74,7 @@ Agent.prototype.callback = function callback(req, opts) {
  * @api public
  */
 Agent.prototype.addRequest = function addRequest(req, _opts) {
-  const ownOpts = Object.assign({}, _opts);
+  let ownOpts = urlInstanceToObject(_opts);
 
   // Set default `host` for HTTP to localhost
   if (null == ownOpts.host) {

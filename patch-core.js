@@ -11,12 +11,35 @@ const https = require('https');
 const patchMarker = "__agent_base_https_request_patched__";
 if (!https.request[patchMarker]) {
   https.request = (function(request) {
-    return function(_options, cb) {
+    return function(_url, _options, cb) {
+      // Support for both
+      // https.request(options[, callback])
+      // https.request(url[, options][, callback])
+      if (typeof _url !== 'string' && !cb) {
+        cb = _options;
+        _options = _url;
+        _url = undefined;
+      }
+      if (!_url && _options) {
+        _url = url.format(_options);
+      }
       let options;
       if (typeof _options === 'string') {
         options = url.parse(_options);
       } else {
-        options = Object.assign({}, _options);
+        options = url.parse(_url);
+        if (_options) {
+          if (_options && Object.getOwnPropertySymbols(_options)[0]) {
+            let urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
+            for (let key of Object.keys(urlContext)) {
+              options[key] = urlContext[key];
+            }
+          } else {
+            for (let key of Object.keys(_options)) {
+              options[key] = _options[key];
+            }
+          }
+        }
       }
       if (null == options.port) {
         options.port = 443;
@@ -35,15 +58,35 @@ if (!https.request[patchMarker]) {
  * Ref: https://github.com/nodejs/node/commit/5118f31
  */
 https.get = function (_url, _options, cb) {
-    let options;
-    if (typeof _url === 'string' && _options && typeof _options !== 'function') {
-      options = Object.assign({}, url.parse(_url), _options);
-    } else if (!_options && !cb) {
-      options = _url;
-    } else if (!cb) {
-      options = _url;
-      cb = _options;
+  // Support for both
+  // https.get(options[, callback])
+  // https.get(url[, options][, callback])
+  if (typeof _url !== 'string' && !cb) {
+    cb = _options;
+    _options = _url;
+    _url = undefined;
+  }
+  if (!_url && _options) {
+    _url = url.format(_options);
+  }
+  let options;
+  if (typeof _options === 'string') {
+    options = url.parse(_options);
+  } else {
+    options = url.parse(_url);
+    if (_options) {
+      if (_options && Object.getOwnPropertySymbols(_options)[0]) {
+        let urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
+        for (let key of Object.keys(urlContext)) {
+          options[key] = urlContext[key];
+        }
+      } else {
+        for (let key of Object.keys(_options)) {
+          options[key] = _options[key];
+        }
+      }
     }
+  }
 
   const req = https.request(options, cb);
   req.end();
