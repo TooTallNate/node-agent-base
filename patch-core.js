@@ -23,19 +23,19 @@ if (!https.request[patchMarker]) {
       if (!_url && _options) {
         _url = url.format(_options);
       }
-      let options;
+      var options;
       if (typeof _options === 'string') {
         options = url.parse(_options);
       } else {
         options = url.parse(_url);
         if (_options) {
-          if (_options && Object.getOwnPropertySymbols(_options)[0]) {
-            let urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
-            for (let key of Object.keys(urlContext)) {
+          if (_options && Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(_options)[0]) {
+            var urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
+            for (var key of Object.keys(urlContext)) {
               options[key] = urlContext[key];
             }
           } else {
-            for (let key of Object.keys(_options)) {
+            for (var key of Object.keys(_options)) {
               options[key] = _options[key];
             }
           }
@@ -69,19 +69,19 @@ https.get = function (_url, _options, cb) {
   if (!_url && _options) {
     _url = url.format(_options);
   }
-  let options;
+  var options;
   if (typeof _options === 'string') {
     options = url.parse(_options);
   } else {
     options = url.parse(_url);
     if (_options) {
-      if (_options && Object.getOwnPropertySymbols(_options)[0]) {
-        let urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
-        for (let key of Object.keys(urlContext)) {
+      if (_options && Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(_options)[0]) {
+        var urlContext = _options[Object.getOwnPropertySymbols(_options)[0]];
+        for (var key of Object.keys(urlContext)) {
           options[key] = urlContext[key];
         }
       } else {
-        for (let key of Object.keys(_options)) {
+        for (var key of Object.keys(_options)) {
           options[key] = _options[key];
         }
       }

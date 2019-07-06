@@ -11,11 +11,11 @@ function isAgent(v) {
 }
 
 function urlInstanceToObject(url) {
-  let urlObject = {};
+  var urlObject = {};
   // If the opts are genearted with the WHATWG API
-  if (url && Object.getOwnPropertySymbols(url)[0]) {
-    let urlContext = url[Object.getOwnPropertySymbols(url)[0]];
-    for (let key of Object.keys(urlContext)) {
+  if (url && Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(url)[0]) {
+    var urlContext = url[Object.getOwnPropertySymbols(url)[0]];
+    for (var key of Object.keys(urlContext)) {
       urlObject[key] = urlContext[key];
     }
   } else {
@@ -44,7 +44,7 @@ function Agent(callback, _opts) {
   // (i.e. it has a callback function) lazily
   this._promisifiedCallback = false;
 
-  let opts = _opts;
+  var opts = _opts;
   if ('function' === typeof callback) {
     this.callback = callback;
   } else if (callback) {
@@ -74,7 +74,7 @@ Agent.prototype.callback = function callback(req, opts) {
  * @api public
  */
 Agent.prototype.addRequest = function addRequest(req, _opts) {
-  let ownOpts = urlInstanceToObject(_opts);
+  var ownOpts = urlInstanceToObject(_opts);
 
   // Set default `host` for HTTP to localhost
   if (null == ownOpts.host) {
@@ -107,8 +107,8 @@ Agent.prototype.addRequest = function addRequest(req, _opts) {
   req.shouldKeepAlive = false;
 
   // Create the `stream.Duplex` instance
-  let timeout;
-  let timedOut = false;
+  var timeout;
+  var timedOut = false;
   const timeoutMs = this.timeout;
   const freeSocket = this.freeSocket;
 
