@@ -32,10 +32,10 @@ function urlInstanceToObject(url) {
  * @api public
  */
 function Agent(callback, _opts) {
-  _opts = urlInstanceToObject(_opts);
+  var opts = urlInstanceToObject(_opts);
 
   if (!(this instanceof Agent)) {
-    return new Agent(callback, _opts);
+    return new Agent(callback, opts);
   }
 
   EventEmitter.call(this);
@@ -44,7 +44,6 @@ function Agent(callback, _opts) {
   // (i.e. it has a callback function) lazily
   this._promisifiedCallback = false;
 
-  var opts = _opts;
   if ('function' === typeof callback) {
     this.callback = callback;
   } else if (callback) {
