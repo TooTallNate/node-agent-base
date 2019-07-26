@@ -164,6 +164,7 @@ describe('Agent', function() {
 
       // needed for `http` module in Node.js 4
       stream.cork = function() {};
+      stream.uncork = function() {};
 
       var opts = {
         method: 'GET',
@@ -457,7 +458,7 @@ describe('"https" module', function() {
       cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
     };
     server = https.createServer(options);
-    server.listen(0, function() {
+    server.listen(443, function() {
       port = server.address().port;
       done();
     });
@@ -496,6 +497,61 @@ describe('"https" module', function() {
       assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
       done();
     });
+  });
+
+  it('should not silently fail on request', function(done) {
+    // this has failed silently by connecting to localhost:443
+    // check to make sure this never happens again
+    var req = https.get(new url.URL("https://0.0.0.1"), {
+      method: "GET",
+    });
+    req.on('error', function(err) {
+      assert.equal(err.code, 'EHOSTUNREACH');
+      assert.equal(err.address, '0.0.0.1');
+      done();
+    });
+  });
+
+  it('should work with all of these request permutations', function(done) {
+    var req = https.request("https://127.0.0.1", {
+      method: "GET",
+    }).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    req = https.request("https://127.0.0.1", {
+      method: "GET",
+    }, () => {}).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    req = https.request("https://127.0.0.1", () => {}).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    req = https.request(new url.URL("/", "https://127.0.0.1"), {
+      method: "GET",
+    }).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    req = https.request(new url.URL("/", "https://127.0.0.1"), {
+      method: "GET",
+    }, () => {}).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    req = https.request(new url.URL("/", "https://127.0.0.1"), () => {}).end();
+    req.on('error', function(err) {
+      assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+    });
+
+    done();
   });
 
   it('should work for basic HTTPS requests', function(done) {

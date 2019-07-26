@@ -11,18 +11,27 @@ const https = require('https');
 const patchMarker = "__agent_base_https_request_patched__";
 if (!https.request[patchMarker]) {
   https.request = (function(request) {
-    return function(_options, cb) {
-      let options;
-      if (typeof _options === 'string') {
-        options = url.parse(_options);
+    return function(...args) {
+      let options = {};
+      if (typeof args[0] === 'string' || args[0] instanceof URL) {
+        if (typeof args[1] !== 'function') {
+          args[1] = Object.assign(options, args[1]);
+        }
+        else {
+          let tmp = args.shift();
+          args.unshift(options);
+          args.unshift(tmp);
+        }
       } else {
-        options = Object.assign({}, _options);
+        args[0] = Object.assign(options, args[0]);
       }
       if (null == options.port) {
         options.port = 443;
       }
       options.secureEndpoint = true;
-      return request.call(https, options, cb);
+      args.unshift(https);
+
+      return request.call(...args);
     };
   })(https.request);
   https.request[patchMarker] = true;
