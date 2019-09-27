@@ -2,9 +2,16 @@
   "name": "agent-base",
   "version": "4.3.0",
   "description": "Turn a function into an `http.Agent` instance",
-  "main": "./index.js",
+  "main": "dist/index",
+  "typings": "dist/index",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "mocha --reporter spec"
+    "build": "tsc",
+    "test": "mocha --reporter spec",
+    "test-lint": "eslint src --ext .js,.ts",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -25,8 +32,18 @@
   "devDependencies": {
     "@types/es6-promisify": "^5.0.0",
     "@types/node": "^10.5.3",
-    "mocha": "^3.4.2",
-    "ws": "^3.0.0"
+    "ws": "^3.0.0",
+    "mocha": "^6.2.0",
+    "typescript": "^3.5.3",
+    "eslint": "5.16.0",
+    "eslint-config-airbnb": "17.1.0",
+    "eslint-config-prettier": "4.1.0",
+    "eslint-import-resolver-typescript": "1.1.1",
+    "eslint-plugin-import": "2.16.0",
+    "eslint-plugin-jsx-a11y": "6.2.1",
+    "eslint-plugin-react": "7.12.4",
+    "@typescript-eslint/parser": "1.1.0",
+    "@typescript-eslint/eslint-plugin": "1.6.0"
   },
   "dependencies": {
     "es6-promisify": "^5.0.0"
