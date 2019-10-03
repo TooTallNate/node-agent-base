@@ -12,13 +12,13 @@ var WebSocket = require('ws');
 var assert = require('assert');
 var events = require('events');
 var inherits = require('util').inherits;
-var Agent = require('../');
+var Agent = require('../src');
 
 var PassthroughAgent = Agent(function(req, opts) {
 	return opts.secureEndpoint ? https.globalAgent : http.globalAgent;
 });
 
-describe('Agent', function() {
+describe('Agent (JavaScript)', function() {
 	describe('subclass', function() {
 		it('should be subclassable', function(done) {
 			function MyAgent() {
@@ -35,6 +35,8 @@ describe('Agent', function() {
 
 			var info = url.parse('https://127.0.0.1:1234/foo');
 			info.agent = new MyAgent();
+			assert(info.agent instanceof Agent);
+			assert(info.agent instanceof MyAgent);
 			https.get(info);
 		});
 	});
@@ -571,7 +573,7 @@ describe('"https" module', function() {
 	});
 
 	it('should not re-patch https.request', () => {
-		var patchModulePath = '../dist/patch-core';
+		var patchModulePath = '../src/patch-core';
 		var patchedRequest = https.request;
 
 		delete require.cache[require.resolve(patchModulePath)];

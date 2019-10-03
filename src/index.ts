@@ -24,15 +24,6 @@ function createAgent(
 	return new createAgent.Agent(callback, opts);
 }
 
-async function defaultCallback(
-	req: createAgent.ClientRequest,
-	opts: createAgent.AgentOptions
-): Promise<createAgent.Agent> {
-	throw new Error(
-		'"agent-base" has no default implementation, you must subclass and override `callback()`'
-	);
-}
-
 namespace createAgent {
 	export type ClientRequest = http.ClientRequest & {
 		_last?: boolean;
@@ -40,10 +31,24 @@ namespace createAgent {
 		method: string;
 	};
 
-	export type AgentCallback = (
-		req: ClientRequest,
-		opts: RequestOptions
-	) => Promise<net.Socket | createAgent.Agent | http.Agent>;
+	export type AgentCallbackReturn =
+		| net.Socket
+		| createAgent.Agent
+		| http.Agent;
+
+	export type AgentCallbackCallback = (
+		err: Error | null | undefined,
+		socket: createAgent.AgentCallbackReturn
+	) => void;
+
+	export type AgentCallbackPromise = (
+		req: createAgent.ClientRequest,
+		opts: createAgent.RequestOptions
+	) =>
+		| createAgent.AgentCallbackReturn
+		| Promise<createAgent.AgentCallbackReturn>;
+
+	export type AgentCallback = typeof Agent.prototype.callback;
 
 	export type AgentOptions = http.AgentOptions & {};
 
@@ -59,10 +64,9 @@ namespace createAgent {
 	 * @api public
 	 */
 	export class Agent extends EventEmitter {
-		private _promisifiedCallback: boolean;
 		public timeout: number | null;
 		public options?: createAgent.AgentOptions;
-		public callback?: createAgent.AgentCallback;
+		private _promisifiedCallback?: createAgent.AgentCallbackPromise;
 
 		constructor(
 			callback?: createAgent.AgentCallback | createAgent.AgentOptions,
@@ -70,9 +74,8 @@ namespace createAgent {
 		) {
 			super();
 
-			// The callback gets promisified if it has 3 parameters
-			// (i.e. it has a callback function) lazily
-			this._promisifiedCallback = false;
+			// The callback gets promisified lazily
+			this._promisifiedCallback = undefined;
 
 			let opts = _opts;
 			if (typeof callback === 'function') {
@@ -87,11 +90,31 @@ namespace createAgent {
 				this.timeout = opts.timeout;
 			}
 
-			if (typeof this.callback !== 'function') {
-				this.callback = defaultCallback;
-			}
-
 			this.options = opts || {};
+		}
+
+		callback(
+			req: createAgent.ClientRequest,
+			opts: createAgent.RequestOptions,
+			fn: createAgent.AgentCallbackCallback
+		): void;
+		callback(
+			req: createAgent.ClientRequest,
+			opts: createAgent.RequestOptions
+		):
+			| createAgent.AgentCallbackReturn
+			| Promise<createAgent.AgentCallbackReturn>;
+		callback(
+			req: createAgent.ClientRequest,
+			opts: createAgent.AgentOptions,
+			fn?: createAgent.AgentCallbackCallback
+		):
+			| createAgent.AgentCallbackReturn
+			| Promise<createAgent.AgentCallbackReturn>
+			| void {
+			throw new Error(
+				'"agent-base" has no default implementation, you must subclass and override `callback()`'
+			);
 		}
 
 		/**
@@ -166,7 +189,7 @@ namespace createAgent {
 				onerror(err);
 			}
 
-			function onsocket(socket: net.Socket | createAgent.Agent | http.Agent) {
+			function onsocket(socket: AgentCallbackReturn) {
 				let sock: net.Socket;
 
 				function onfree() {
@@ -205,10 +228,15 @@ namespace createAgent {
 				return;
 			}
 
-			if (!this._promisifiedCallback && this.callback.length >= 3) {
-				// Legacy callback function - convert to a Promise
-				this.callback = promisify(this.callback, { thisArg: this });
-				this._promisifiedCallback = true;
+			if (!this._promisifiedCallback) {
+				if (this.callback.length >= 3) {
+					// Legacy callback function - convert to a Promise
+					this._promisifiedCallback = promisify(this.callback, {
+						thisArg: this
+					});
+				} else {
+					this._promisifiedCallback = this.callback;
+				}
 			}
 
 			if (typeof timeoutMs === 'number' && timeoutMs > 0) {
@@ -216,7 +244,7 @@ namespace createAgent {
 			}
 
 			try {
-				Promise.resolve(this.callback(req, opts)).then(
+				Promise.resolve(this._promisifiedCallback(req, opts)).then(
 					onsocket,
 					callbackError
 				);
