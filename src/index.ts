@@ -53,6 +53,9 @@ namespace createAgent {
 	export type AgentOptions = http.AgentOptions & {};
 
 	export type RequestOptions = http.RequestOptions & {
+		// `port` on http.RequestOptions can be a string or undefined,
+		// but `net.TcpNetConnectOpts` expects only a number
+		port: number;
 		secureEndpoint: boolean;
 	};
 
@@ -66,6 +69,10 @@ namespace createAgent {
 	export class Agent extends EventEmitter {
 		public timeout: number | null;
 		public options?: createAgent.AgentOptions;
+		public maxFreeSockets: number;
+		public maxSockets: number;
+		public sockets: net.Socket[];
+		public requests: http.ClientRequest[];
 		private _promisifiedCallback?: createAgent.AgentCallbackPromise;
 
 		constructor(
@@ -91,6 +98,11 @@ namespace createAgent {
 			}
 
 			this.options = opts || {};
+
+			this.maxFreeSockets = 1;
+			this.maxSockets = 1;
+			this.sockets = [];
+			this.requests = [];
 		}
 
 		callback(
@@ -157,8 +169,8 @@ namespace createAgent {
 			req.shouldKeepAlive = false;
 
 			// Create the `stream.Duplex` instance
-			let timeout: ReturnType<typeof setTimeout> | null = null;
 			let timedOut = false;
+			let timeout: ReturnType<typeof setTimeout> | null = null;
 			const timeoutMs = this.timeout;
 			const freeSocket = this.freeSocket;
 
@@ -182,7 +194,7 @@ namespace createAgent {
 
 			function callbackError(err: NodeJS.ErrnoException) {
 				if (timedOut) return;
-				if (timeout != null) {
+				if (timeout !== null) {
 					clearTimeout(timeout);
 					timeout = null;
 				}
@@ -243,6 +255,10 @@ namespace createAgent {
 				timeout = setTimeout(ontimeout, timeoutMs);
 			}
 
+			if ('port' in opts && typeof opts.port !== 'number') {
+				opts.port = Number(opts.port);
+			}
+
 			try {
 				Promise.resolve(this._promisifiedCallback(req, opts)).then(
 					onsocket,
@@ -256,6 +272,9 @@ namespace createAgent {
 		freeSocket(socket: net.Socket, opts: AgentOptions) {
 			// TODO reuse sockets
 			socket.destroy();
+		}
+
+		destroy() {
 		}
 	}
 }
