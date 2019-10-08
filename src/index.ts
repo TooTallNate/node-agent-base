@@ -136,7 +136,7 @@ namespace createAgent {
 		 * @api public
 		 */
 		addRequest(req: ClientRequest, _opts: RequestOptions) {
-			const ownOpts: RequestOptions = Object.assign({}, _opts);
+			const ownOpts: RequestOptions = { ..._opts };
 
 			// Set default `host` for HTTP to localhost
 			if (ownOpts.host == null) {
@@ -148,7 +148,7 @@ namespace createAgent {
 				ownOpts.port = ownOpts.secureEndpoint ? 443 : 80;
 			}
 
-			const opts = Object.assign({}, this.options, ownOpts);
+			const opts = { ...this.options, ...ownOpts };
 
 			if (opts.host && opts.path) {
 				// If both a `host` and `path` are specified then it's most likely the
