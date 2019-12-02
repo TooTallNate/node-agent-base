@@ -286,8 +286,7 @@ namespace createAgent {
 			socket.destroy();
 		}
 
-		destroy() {
-		}
+		destroy() {}
 	}
 }
 
