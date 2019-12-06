@@ -6,7 +6,7 @@ import listen from 'async-listen';
 import { Agent, RequestOptions } from '../src';
 
 const req = (opts: http.RequestOptions): Promise<http.IncomingMessage> => {
-	return new Promise((resolve) => {
+	return new Promise(resolve => {
 		const req = http.request(opts, resolve);
 		req.end();
 	});
@@ -49,13 +49,12 @@ describe('"http" module', () => {
 		let gotReq = false;
 		let gotCallback = false;
 
-		const agent = new Agent((
-			req: http.ClientRequest,
-			opts: RequestOptions
-		): net.Socket => {
-			gotCallback = true;
-			return net.connect(opts);
-		});
+		const agent = new Agent(
+			(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+				gotCallback = true;
+				return net.connect(opts);
+			}
+		);
 
 		const server = http.createServer((req, res) => {
 			gotReq = true;

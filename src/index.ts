@@ -1,4 +1,3 @@
-import './patch-core';
 import net from 'net';
 import http from 'http';
 import promisify from 'es6-promisify';
@@ -10,6 +9,12 @@ function isAgentBase(v: any): v is createAgent.Agent {
 
 function isHttpAgent(v: any): v is http.Agent {
 	return Boolean(v) && typeof v.addRequest === 'function';
+}
+
+function isSecureEndpoint(): boolean {
+	const { stack } = new Error();
+	if (typeof stack !== 'string') return false;
+	return stack.split('\n').some(l => l.indexOf('(https.js:') !== -1);
 }
 
 function createAgent(opts?: createAgent.AgentOptions): createAgent.Agent;
@@ -105,6 +110,10 @@ namespace createAgent {
 			this.requests = [];
 		}
 
+		get defaultPort(): number {
+			return isSecureEndpoint() ? 443 : 80;
+		}
+
 		callback(
 			req: createAgent.ClientRequest,
 			opts: createAgent.RequestOptions,
@@ -136,7 +145,10 @@ namespace createAgent {
 		 * @api public
 		 */
 		addRequest(req: ClientRequest, _opts: RequestOptions) {
-			const ownOpts: RequestOptions = { ..._opts };
+			const ownOpts: RequestOptions = {
+				..._opts,
+				secureEndpoint: isSecureEndpoint()
+			};
 
 			// Set default `host` for HTTP to localhost
 			if (ownOpts.host == null) {
@@ -274,8 +286,7 @@ namespace createAgent {
 			socket.destroy();
 		}
 
-		destroy() {
-		}
+		destroy() {}
 	}
 }
 

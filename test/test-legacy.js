@@ -538,22 +538,6 @@ describe('"https" module', function() {
 		});
 	});
 
-	it('should support the 3-argument `https.get()`', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			assert.equal('google.com', opts.host);
-			assert.equal('/q', opts.pathname || opts.path);
-			assert.equal('881', opts.port);
-			assert.equal('bar', opts.foo);
-			done();
-		});
-
-		https.get('https://google.com:881/q', {
-			host: 'google.com',
-			foo: 'bar',
-			agent: agent
-		});
-	});
-
 	it('should default to port 443', function(done) {
 		var agent = new Agent(function(req, opts, fn) {
 			assert.equal(true, opts.secureEndpoint);
@@ -570,17 +554,6 @@ describe('"https" module', function() {
 			agent: agent,
 			rejectUnauthorized: false
 		});
-	});
-
-	it('should not re-patch https.request', () => {
-		var patchModulePath = '../src/patch-core';
-		var patchedRequest = https.request;
-
-		delete require.cache[require.resolve(patchModulePath)];
-		require(patchModulePath);
-
-		assert.equal(patchedRequest, https.request);
-		assert.equal(true, https.request.__agent_base_https_request_patched__);
 	});
 
 	describe('PassthroughAgent', function() {
