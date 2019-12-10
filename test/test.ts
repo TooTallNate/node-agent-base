@@ -16,7 +16,9 @@ function json(res: http.IncomingMessage): Promise<any> {
 	return new Promise((resolve, reject) => {
 		let data: string = '';
 		res.setEncoding('utf8');
-		res.on('data', b => { data += b });
+		res.on('data', b => {
+			data += b;
+		});
 		res.on('end', () => resolve(JSON.parse(data)));
 	});
 }
