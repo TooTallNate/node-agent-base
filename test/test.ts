@@ -12,6 +12,15 @@ const req = (opts: http.RequestOptions): Promise<http.IncomingMessage> => {
 	});
 };
 
+function json(res: http.IncomingMessage): Promise<any> {
+	return new Promise((resolve, reject) => {
+		let data: string = '';
+		res.setEncoding('utf8');
+		res.on('data', b => { data += b });
+		res.on('end', () => resolve(JSON.parse(data)));
+	});
+}
+
 describe('Agent (TypeScript)', () => {
 	describe('subclass', () => {
 		it('should be extendable (direct return)', () => {
@@ -76,6 +85,35 @@ describe('"http" module', () => {
 			assert.equal('/foo', res.headers['x-url']);
 			assert(gotReq);
 			assert(gotCallback);
+		} finally {
+			server.close();
+		}
+	});
+
+	it('should not send a port number for the default port', async () => {
+		const agent = new Agent(
+			(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+				return net.connect(opts);
+			}
+		);
+
+		const server = http.createServer((req, res) => {
+			res.end(JSON.stringify(req.headers));
+		});
+		await listen(server);
+
+		const addr = server.address();
+		if (typeof addr === 'string') {
+			throw new Error('Server did not bind to a port');
+		}
+
+		agent.defaultPort = addr.port;
+
+		try {
+			const info = url.parse(`http://127.0.0.1:${addr.port}/foo`);
+			const res = await req({ agent, ...info });
+			const body = await json(res);
+			assert.equal(body.host, '127.0.0.1');
 		} finally {
 			server.close();
 		}

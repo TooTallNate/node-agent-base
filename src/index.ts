@@ -79,6 +79,7 @@ namespace createAgent {
 		public sockets: net.Socket[];
 		public requests: http.ClientRequest[];
 		private _promisifiedCallback?: createAgent.AgentCallbackPromise;
+		private _defaultPort?: number;
 
 		constructor(
 			callback?: createAgent.AgentCallback | createAgent.AgentOptions,
@@ -111,7 +112,15 @@ namespace createAgent {
 		}
 
 		get defaultPort(): number {
-			return isSecureEndpoint() ? 443 : 80;
+			if (typeof this._defaultPort === 'number') {
+				return this._defaultPort;
+			} else {
+				return isSecureEndpoint() ? 443 : 80;
+			}
+		}
+
+		set defaultPort(v: number) {
+			this._defaultPort = v;
 		}
 
 		callback(
