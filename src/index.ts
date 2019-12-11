@@ -80,6 +80,7 @@ namespace createAgent {
 		public requests: http.ClientRequest[];
 		private promisifiedCallback?: createAgent.AgentCallbackPromise;
 		private explicitDefaultPort?: number;
+		private explicitProtocol?: string;
 
 		constructor(
 			callback?: createAgent.AgentCallback | createAgent.AgentOptions,
@@ -121,6 +122,18 @@ namespace createAgent {
 
 		set defaultPort(v: number) {
 			this.explicitDefaultPort = v;
+		}
+
+		get protocol(): string {
+			if (typeof this.explicitProtocol === 'string') {
+				return this.explicitProtocol;
+			} else {
+				return isSecureEndpoint() ? 'https:' : 'http:';
+			}
+		}
+
+		set protocol(v: string) {
+			this.explicitProtocol = v;
 		}
 
 		callback(
