@@ -115,9 +115,8 @@ namespace createAgent {
 		get defaultPort(): number {
 			if (typeof this.explicitDefaultPort === 'number') {
 				return this.explicitDefaultPort;
-			} else {
-				return isSecureEndpoint() ? 443 : 80;
 			}
+			return isSecureEndpoint() ? 443 : 80;
 		}
 
 		set defaultPort(v: number) {
@@ -127,9 +126,8 @@ namespace createAgent {
 		get protocol(): string {
 			if (typeof this.explicitProtocol === 'string') {
 				return this.explicitProtocol;
-			} else {
-				return isSecureEndpoint() ? 'https:' : 'http:';
 			}
+			return isSecureEndpoint() ? 'https:' : 'http:';
 		}
 
 		set protocol(v: string) {
