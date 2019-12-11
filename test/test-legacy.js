@@ -209,218 +209,40 @@ describe('Agent (JavaScript)', function() {
 			req.end();
 		});
 	});
-});
 
-describe('"http" module', function() {
-	var server;
-	var port;
+	describe('"http" module', function() {
+		var server;
+		var port;
 
-	// setup test HTTP server
-	before(function(done) {
-		server = http.createServer();
-		server.listen(0, function() {
-			port = server.address().port;
-			done();
-		});
-	});
-
-	// shut down test HTTP server
-	after(function(done) {
-		server.once('close', function() {
-			done();
-		});
-		server.close();
-	});
-
-	it('should work for basic HTTP requests', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts, fn) {
-			called = true;
-			var socket = net.connect(opts);
-			fn(null, socket);
-		});
-
-		// add HTTP server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.setHeader('X-Foo', 'bar');
-			res.setHeader('X-Url', req.url);
-			res.end();
-		});
-
-		var info = url.parse('http://127.0.0.1:' + port + '/foo');
-		info.agent = agent;
-		http.get(info, function(res) {
-			assert.equal('bar', res.headers['x-foo']);
-			assert.equal('/foo', res.headers['x-url']);
-			assert(gotReq);
-			assert(called);
-			done();
-		});
-	});
-
-	it('should support direct return in `connect()`', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts) {
-			called = true;
-			return net.connect(opts);
-		});
-
-		// add HTTP server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.setHeader('X-Foo', 'bar');
-			res.setHeader('X-Url', req.url);
-			res.end();
-		});
-
-		var info = url.parse('http://127.0.0.1:' + port + '/foo');
-		info.agent = agent;
-		http.get(info, function(res) {
-			assert.equal('bar', res.headers['x-foo']);
-			assert.equal('/foo', res.headers['x-url']);
-			assert(gotReq);
-			assert(called);
-			done();
-		});
-	});
-
-	it('should support returning a Promise in `connect()`', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts) {
-			return new Promise(function(resolve, reject) {
-				called = true;
-				resolve(net.connect(opts));
+		// setup test HTTP server
+		before(function(done) {
+			server = http.createServer();
+			server.listen(0, function() {
+				port = server.address().port;
+				done();
 			});
 		});
 
-		// add HTTP server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.setHeader('X-Foo', 'bar');
-			res.setHeader('X-Url', req.url);
-			res.end();
+		beforeEach(function() {
+			server.removeAllListeners('request');
 		});
 
-		var info = url.parse('http://127.0.0.1:' + port + '/foo');
-		info.agent = agent;
-		http.get(info, function(res) {
-			assert.equal('bar', res.headers['x-foo']);
-			assert.equal('/foo', res.headers['x-url']);
-			assert(gotReq);
-			assert(called);
-			done();
-		});
-	});
-
-	it('should set the `Connection: close` response header', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts, fn) {
-			called = true;
-			var socket = net.connect(opts);
-			fn(null, socket);
+		// shut down test HTTP server
+		after(function(done) {
+			server.once('close', function() {
+				done();
+			});
+			server.close();
 		});
 
-		// add HTTP server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.setHeader('X-Url', req.url);
-			assert.equal('close', req.headers.connection);
-			res.end();
-		});
+		it('should work for basic HTTP requests', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts, fn) {
+				called = true;
+				var socket = net.connect(opts);
+				fn(null, socket);
+			});
 
-		var info = url.parse('http://127.0.0.1:' + port + '/bar');
-		info.agent = agent;
-		http.get(info, function(res) {
-			assert.equal('/bar', res.headers['x-url']);
-			assert.equal('close', res.headers.connection);
-			assert(gotReq);
-			assert(called);
-			done();
-		});
-	});
-
-	it('should pass through options from `http.request()`', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			assert.equal('google.com', opts.host);
-			assert.equal('bar', opts.foo);
-			done();
-		});
-
-		http.get({
-			host: 'google.com',
-			foo: 'bar',
-			agent: agent
-		});
-	});
-
-	it('should default to port 80', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			assert.equal(80, opts.port);
-			done();
-		});
-
-		// (probably) not hitting a real HTTP server here,
-		// so no need to add a httpServer request listener
-		http.get({
-			host: '127.0.0.1',
-			path: '/foo',
-			agent: agent
-		});
-	});
-
-	it('should support the "timeout" option', function(done) {
-		// ensure we timeout after the "error" event had a chance to trigger
-		this.timeout(1000);
-		this.slow(800);
-
-		var agent = new Agent(
-			function(req, opts, fn) {
-				// this function will time out
-			},
-			{ timeout: 100 }
-		);
-
-		var opts = url.parse('http://nodejs.org');
-		opts.agent = agent;
-
-		var req = http.get(opts);
-		req.once('error', function(err) {
-			assert.equal('ETIMEOUT', err.code);
-			req.abort();
-			done();
-		});
-	});
-
-	it('should free sockets after use', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			var socket = net.connect(opts);
-			fn(null, socket);
-		});
-
-		// add HTTP server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.end();
-		});
-
-		var info = url.parse('http://127.0.0.1:' + port + '/foo');
-		info.agent = agent;
-		http.get(info, function(res) {
-			res.socket.emit('free');
-			assert.equal(true, res.socket.destroyed);
-			assert(gotReq);
-			done();
-		});
-	});
-
-	describe('PassthroughAgent', function() {
-		it('should pass through to `http.globalAgent`', function(done) {
 			// add HTTP server "request" listener
 			var gotReq = false;
 			server.once('request', function(req, res) {
@@ -431,133 +253,23 @@ describe('"http" module', function() {
 			});
 
 			var info = url.parse('http://127.0.0.1:' + port + '/foo');
-			info.agent = PassthroughAgent;
+			info.agent = agent;
 			http.get(info, function(res) {
 				assert.equal('bar', res.headers['x-foo']);
 				assert.equal('/foo', res.headers['x-url']);
 				assert(gotReq);
+				assert(called);
 				done();
 			});
 		});
-	});
-});
 
-describe('"https" module', function() {
-	var server;
-	var port;
+		it('should support direct return in `connect()`', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts) {
+				called = true;
+				return net.connect(opts);
+			});
 
-	// setup test HTTPS server
-	before(function(done) {
-		var options = {
-			key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
-			cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
-		};
-		server = https.createServer(options);
-		server.listen(0, function() {
-			port = server.address().port;
-			done();
-		});
-	});
-
-	// shut down test HTTP server
-	after(function(done) {
-		server.once('close', function() {
-			done();
-		});
-		server.close();
-	});
-
-	it('should not modify the passed in Options object', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts, fn) {
-			called = true;
-			assert.equal(true, opts.secureEndpoint);
-			assert.equal(443, opts.port);
-			assert.equal('localhost', opts.host);
-		});
-		var opts = { agent: agent };
-		var req = https.request(opts);
-		assert.equal(true, called);
-		assert.equal(false, 'secureEndpoint' in opts);
-		assert.equal(false, 'port' in opts);
-		done();
-	});
-
-	it('should work with a String URL', function(done) {
-		var endpoint = 'https://127.0.0.1:' + port;
-		var req = https.get(endpoint);
-
-		// it's gonna error out since `rejectUnauthorized` is not being passed in
-		req.on('error', function(err) {
-			assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
-			done();
-		});
-	});
-
-	it('should work for basic HTTPS requests', function(done) {
-		var called = false;
-		var agent = new Agent(function(req, opts, fn) {
-			called = true;
-			assert(opts.secureEndpoint);
-			var socket = tls.connect(opts);
-			fn(null, socket);
-		});
-
-		// add HTTPS server "request" listener
-		var gotReq = false;
-		server.once('request', function(req, res) {
-			gotReq = true;
-			res.setHeader('X-Foo', 'bar');
-			res.setHeader('X-Url', req.url);
-			res.end();
-		});
-
-		var info = url.parse('https://127.0.0.1:' + port + '/foo');
-		info.agent = agent;
-		info.rejectUnauthorized = false;
-		https.get(info, function(res) {
-			assert.equal('bar', res.headers['x-foo']);
-			assert.equal('/foo', res.headers['x-url']);
-			assert(gotReq);
-			assert(called);
-			done();
-		});
-	});
-
-	it('should pass through options from `https.request()`', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			assert.equal('google.com', opts.host);
-			assert.equal('bar', opts.foo);
-			done();
-		});
-
-		https.get({
-			host: 'google.com',
-			foo: 'bar',
-			agent: agent
-		});
-	});
-
-	it('should default to port 443', function(done) {
-		var agent = new Agent(function(req, opts, fn) {
-			assert.equal(true, opts.secureEndpoint);
-			assert.equal(false, opts.rejectUnauthorized);
-			assert.equal(443, opts.port);
-			done();
-		});
-
-		// (probably) not hitting a real HTTPS server here,
-		// so no need to add a httpsServer request listener
-		https.get({
-			host: '127.0.0.1',
-			path: '/foo',
-			agent: agent,
-			rejectUnauthorized: false
-		});
-	});
-
-	describe('PassthroughAgent', function() {
-		it('should pass through to `https.globalAgent`', function(done) {
 			// add HTTP server "request" listener
 			var gotReq = false;
 			server.once('request', function(req, res) {
@@ -567,128 +279,433 @@ describe('"https" module', function() {
 				res.end();
 			});
 
+			var info = url.parse('http://127.0.0.1:' + port + '/foo');
+			info.agent = agent;
+			http.get(info, function(res) {
+				assert.equal('bar', res.headers['x-foo']);
+				assert.equal('/foo', res.headers['x-url']);
+				assert(gotReq);
+				assert(called);
+				done();
+			});
+		});
+
+		it('should support returning a Promise in `connect()`', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts) {
+				return new Promise(function(resolve, reject) {
+					called = true;
+					resolve(net.connect(opts));
+				});
+			});
+
+			// add HTTP server "request" listener
+			var gotReq = false;
+			server.once('request', function(req, res) {
+				gotReq = true;
+				res.setHeader('X-Foo', 'bar');
+				res.setHeader('X-Url', req.url);
+				res.end();
+			});
+
+			var info = url.parse('http://127.0.0.1:' + port + '/foo');
+			info.agent = agent;
+			http.get(info, function(res) {
+				assert.equal('bar', res.headers['x-foo']);
+				assert.equal('/foo', res.headers['x-url']);
+				assert(gotReq);
+				assert(called);
+				done();
+			});
+		});
+
+		it('should set the `Connection: close` response header', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts, fn) {
+				called = true;
+				var socket = net.connect(opts);
+				fn(null, socket);
+			});
+
+			// add HTTP server "request" listener
+			var gotReq = false;
+			server.once('request', function(req, res) {
+				gotReq = true;
+				res.setHeader('X-Url', req.url);
+				assert.equal('close', req.headers.connection);
+				res.end();
+			});
+
+			var info = url.parse('http://127.0.0.1:' + port + '/bar');
+			info.agent = agent;
+			http.get(info, function(res) {
+				assert.equal('/bar', res.headers['x-url']);
+				assert.equal('close', res.headers.connection);
+				assert(gotReq);
+				assert(called);
+				done();
+			});
+		});
+
+		it('should pass through options from `http.request()`', function(done) {
+			var agent = new Agent(function(req, opts, fn) {
+				assert.equal('google.com', opts.host);
+				assert.equal('bar', opts.foo);
+				done();
+			});
+
+			http.get({
+				host: 'google.com',
+				foo: 'bar',
+				agent: agent
+			});
+		});
+
+		it('should default to port 80', function(done) {
+			var agent = new Agent(function(req, opts, fn) {
+				assert.equal(80, opts.port);
+				done();
+			});
+
+			// (probably) not hitting a real HTTP server here,
+			// so no need to add a httpServer request listener
+			http.get({
+				host: '127.0.0.1',
+				path: '/foo',
+				agent: agent
+			});
+		});
+
+		it('should support the "timeout" option', function(done) {
+			// ensure we timeout after the "error" event had a chance to trigger
+			this.timeout(1000);
+			this.slow(800);
+
+			var agent = new Agent(
+				function(req, opts, fn) {
+					// this function will time out
+				},
+				{ timeout: 100 }
+			);
+
+			var opts = url.parse('http://nodejs.org');
+			opts.agent = agent;
+
+			var req = http.get(opts);
+			req.once('error', function(err) {
+				assert.equal('ETIMEOUT', err.code);
+				req.abort();
+				done();
+			});
+		});
+
+		it('should free sockets after use', function(done) {
+			var agent = new Agent(function(req, opts, fn) {
+				var socket = net.connect(opts);
+				fn(null, socket);
+			});
+
+			// add HTTP server "request" listener
+			var gotReq = false;
+			server.once('request', function(req, res) {
+				gotReq = true;
+				res.end();
+			});
+
+			var info = url.parse('http://127.0.0.1:' + port + '/foo');
+			info.agent = agent;
+			http.get(info, function(res) {
+				res.socket.emit('free');
+				assert.equal(true, res.socket.destroyed);
+				assert(gotReq);
+				done();
+			});
+		});
+
+		describe('PassthroughAgent', function() {
+			it('should pass through to `http.globalAgent`', function(done) {
+				// add HTTP server "request" listener
+				var gotReq = false;
+				server.once('request', function(req, res) {
+					gotReq = true;
+					res.setHeader('X-Foo', 'bar');
+					res.setHeader('X-Url', req.url);
+					res.end();
+				});
+
+				var info = url.parse('http://127.0.0.1:' + port + '/foo');
+				info.agent = PassthroughAgent;
+				http.get(info, function(res) {
+					assert.equal('bar', res.headers['x-foo']);
+					assert.equal('/foo', res.headers['x-url']);
+					assert(gotReq);
+					done();
+				});
+			});
+		});
+	});
+
+	describe('"https" module', function() {
+		var server;
+		var port;
+
+		// setup test HTTPS server
+		before(function(done) {
+			var options = {
+				key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+				cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
+			};
+			server = https.createServer(options);
+			server.listen(0, function() {
+				port = server.address().port;
+				done();
+			});
+		});
+
+		beforeEach(function() {
+			server.removeAllListeners('request');
+		});
+
+		// shut down test HTTP server
+		after(function(done) {
+			server.once('close', function() {
+				done();
+			});
+			server.close();
+		});
+
+		it('should not modify the passed in Options object', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts, fn) {
+				called = true;
+				assert.equal(true, opts.secureEndpoint);
+				assert.equal(443, opts.port);
+				assert.equal('localhost', opts.host);
+			});
+			var opts = { agent: agent };
+			var req = https.request(opts);
+			assert.equal(true, called);
+			assert.equal(false, 'secureEndpoint' in opts);
+			assert.equal(false, 'port' in opts);
+			done();
+		});
+
+		it('should work with a String URL', function(done) {
+			var endpoint = 'https://127.0.0.1:' + port;
+			var req = https.get(endpoint);
+
+			// it's gonna error out since `rejectUnauthorized` is not being passed in
+			req.on('error', function(err) {
+				assert.equal(err.code, 'DEPTH_ZERO_SELF_SIGNED_CERT');
+				done();
+			});
+		});
+
+		it('should work for basic HTTPS requests', function(done) {
+			var called = false;
+			var agent = new Agent(function(req, opts, fn) {
+				called = true;
+				assert(opts.secureEndpoint);
+				var socket = tls.connect(opts);
+				fn(null, socket);
+			});
+
+			// add HTTPS server "request" listener
+			var gotReq = false;
+			server.once('request', function(req, res) {
+				gotReq = true;
+				res.setHeader('X-Foo', 'bar');
+				res.setHeader('X-Url', req.url);
+				res.end();
+			});
+
 			var info = url.parse('https://127.0.0.1:' + port + '/foo');
-			info.agent = PassthroughAgent;
+			info.agent = agent;
 			info.rejectUnauthorized = false;
 			https.get(info, function(res) {
 				assert.equal('bar', res.headers['x-foo']);
 				assert.equal('/foo', res.headers['x-url']);
 				assert(gotReq);
+				assert(called);
+				done();
+			});
+		});
+
+		it('should pass through options from `https.request()`', function(done) {
+			var agent = new Agent(function(req, opts, fn) {
+				assert.equal('google.com', opts.host);
+				assert.equal('bar', opts.foo);
+				done();
+			});
+
+			https.get({
+				host: 'google.com',
+				foo: 'bar',
+				agent: agent
+			});
+		});
+
+		it('should default to port 443', function(done) {
+			var agent = new Agent(function(req, opts, fn) {
+				assert.equal(true, opts.secureEndpoint);
+				assert.equal(false, opts.rejectUnauthorized);
+				assert.equal(443, opts.port);
+				done();
+			});
+
+			// (probably) not hitting a real HTTPS server here,
+			// so no need to add a httpsServer request listener
+			https.get({
+				host: '127.0.0.1',
+				path: '/foo',
+				agent: agent,
+				rejectUnauthorized: false
+			});
+		});
+
+		describe('PassthroughAgent', function() {
+			it('should pass through to `https.globalAgent`', function(done) {
+				// add HTTP server "request" listener
+				var gotReq = false;
+				server.once('request', function(req, res) {
+					gotReq = true;
+					res.setHeader('X-Foo', 'bar');
+					res.setHeader('X-Url', req.url);
+					res.end();
+				});
+
+				var info = url.parse('https://127.0.0.1:' + port + '/foo');
+				info.agent = PassthroughAgent;
+				info.rejectUnauthorized = false;
+				https.get(info, function(res) {
+					assert.equal('bar', res.headers['x-foo']);
+					assert.equal('/foo', res.headers['x-url']);
+					assert(gotReq);
+					done();
+				});
+			});
+		});
+	});
+
+	describe('"ws" server', function() {
+		var wss;
+		var server;
+		var port;
+
+		// setup test HTTP server
+		before(function(done) {
+			server = http.createServer();
+			wss = new WebSocket.Server({ server: server });
+			server.listen(0, function() {
+				port = server.address().port;
+				done();
+			});
+		});
+
+		beforeEach(function() {
+			server.removeAllListeners('request');
+			wss.removeAllListeners('connection');
+		});
+
+		// shut down test HTTP server
+		after(function(done) {
+			server.once('close', function() {
+				done();
+			});
+			server.close();
+		});
+
+		it('should work for basic WebSocket connections', function(done) {
+			function onconnection(ws) {
+				ws.on('message', function(data) {
+					assert.equal('ping', data);
+					ws.send('pong');
+				});
+			}
+			wss.on('connection', onconnection);
+
+			var agent = new Agent(function(req, opts, fn) {
+				var socket = net.connect(opts);
+				fn(null, socket);
+			});
+
+			var client = new WebSocket('ws://127.0.0.1:' + port + '/', {
+				agent: agent
+			});
+
+			client.on('open', function() {
+				client.send('ping');
+			});
+
+			client.on('message', function(data) {
+				assert.equal('pong', data);
+				client.close();
 				done();
 			});
 		});
 	});
-});
 
-describe('"ws" server', function() {
-	var wss;
-	var server;
-	var port;
+	describe('"wss" server', function() {
+		var wss;
+		var server;
+		var port;
 
-	// setup test HTTP server
-	before(function(done) {
-		server = http.createServer();
-		wss = new WebSocket.Server({ server: server });
-		server.listen(0, function() {
-			port = server.address().port;
-			done();
-		});
-	});
-
-	// shut down test HTTP server
-	after(function(done) {
-		server.once('close', function() {
-			done();
-		});
-		server.close();
-	});
-
-	it('should work for basic WebSocket connections', function(done) {
-		function onconnection(ws) {
-			ws.on('message', function(data) {
-				assert.equal('ping', data);
-				ws.send('pong');
+		// setup test HTTP server
+		before(function(done) {
+			var options = {
+				key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+				cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
+			};
+			server = https.createServer(options);
+			wss = new WebSocket.Server({ server: server });
+			server.listen(0, function() {
+				port = server.address().port;
+				done();
 			});
-		}
-		wss.on('connection', onconnection);
-
-		var agent = new Agent(function(req, opts, fn) {
-			var socket = net.connect(opts);
-			fn(null, socket);
 		});
 
-		var client = new WebSocket('ws://127.0.0.1:' + port + '/', {
-			agent: agent
+		beforeEach(function() {
+			server.removeAllListeners('request');
+			wss.removeAllListeners('connection');
 		});
 
-		client.on('open', function() {
-			client.send('ping');
-		});
-
-		client.on('message', function(data) {
-			assert.equal('pong', data);
-			client.close();
-			wss.removeListener('connection', onconnection);
-			done();
-		});
-	});
-});
-
-describe('"wss" server', function() {
-	var wss;
-	var server;
-	var port;
-
-	// setup test HTTP server
-	before(function(done) {
-		var options = {
-			key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
-			cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
-		};
-		server = https.createServer(options);
-		wss = new WebSocket.Server({ server: server });
-		server.listen(0, function() {
-			port = server.address().port;
-			done();
-		});
-	});
-
-	// shut down test HTTP server
-	after(function(done) {
-		server.once('close', function() {
-			done();
-		});
-		server.close();
-	});
-
-	it('should work for secure WebSocket connections', function(done) {
-		function onconnection(ws) {
-			ws.on('message', function(data) {
-				assert.equal('ping', data);
-				ws.send('pong');
+		// shut down test HTTP server
+		after(function(done) {
+			server.once('close', function() {
+				done();
 			});
-		}
-		wss.on('connection', onconnection);
-
-		var agent = new Agent(function(req, opts, fn) {
-			var socket = tls.connect(opts);
-			fn(null, socket);
+			server.close();
 		});
 
-		var client = new WebSocket('wss://127.0.0.1:' + port + '/', {
-			agent: agent,
-			rejectUnauthorized: false
-		});
+		it('should work for secure WebSocket connections', function(done) {
+			function onconnection(ws) {
+				ws.on('message', function(data) {
+					assert.equal('ping', data);
+					ws.send('pong');
+				});
+			}
+			wss.on('connection', onconnection);
 
-		client.on('open', function() {
-			client.send('ping');
-		});
+			var agent = new Agent(function(req, opts, fn) {
+				var socket = tls.connect(opts);
+				fn(null, socket);
+			});
 
-		client.on('message', function(data) {
-			assert.equal('pong', data);
-			client.close();
-			wss.removeListener('connection', onconnection);
-			done();
+			var client = new WebSocket('wss://127.0.0.1:' + port + '/', {
+				agent: agent,
+				rejectUnauthorized: false
+			});
+
+			client.on('open', function() {
+				client.send('ping');
+			});
+
+			client.on('message', function(data) {
+				assert.equal('pong', data);
+				client.close();
+				wss.removeListener('connection', onconnection);
+				done();
+			});
 		});
 	});
 });
