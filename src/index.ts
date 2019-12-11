@@ -205,8 +205,8 @@ namespace createAgent {
 
 			// Create the `stream.Duplex` instance
 			let timedOut = false;
-			let timeout: ReturnType<typeof setTimeout> | null = null;
-			const timeoutMs = this.timeout;
+			let timeoutId: ReturnType<typeof setTimeout> | null = null;
+			const timeoutMs = opts.timeout || this.timeout;
 			const freeSocket = this.freeSocket;
 
 			function onerror(err: NodeJS.ErrnoException) {
@@ -218,7 +218,7 @@ namespace createAgent {
 			}
 
 			function ontimeout() {
-				timeout = null;
+				timeoutId = null;
 				timedOut = true;
 				const err: NodeJS.ErrnoException = new Error(
 					`A "socket" was not created for HTTP request before ${timeoutMs}ms`
@@ -229,9 +229,9 @@ namespace createAgent {
 
 			function callbackError(err: NodeJS.ErrnoException) {
 				if (timedOut) return;
-				if (timeout !== null) {
-					clearTimeout(timeout);
-					timeout = null;
+				if (timeoutId !== null) {
+					clearTimeout(timeoutId);
+					timeoutId = null;
 				}
 				onerror(err);
 			}
@@ -244,9 +244,9 @@ namespace createAgent {
 				}
 
 				if (timedOut) return;
-				if (timeout != null) {
-					clearTimeout(timeout);
-					timeout = null;
+				if (timeoutId != null) {
+					clearTimeout(timeoutId);
+					timeoutId = null;
 				}
 
 				if (isAgentBase(socket) || isHttpAgent(socket)) {
@@ -285,7 +285,7 @@ namespace createAgent {
 			}
 
 			if (typeof timeoutMs === 'number' && timeoutMs > 0) {
-				timeout = setTimeout(ontimeout, timeoutMs);
+				timeoutId = setTimeout(ontimeout, timeoutMs);
 			}
 
 			if ('port' in opts && typeof opts.port !== 'number') {
