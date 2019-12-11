@@ -257,7 +257,7 @@ namespace createAgent {
 
 				if (socket) {
 					sock = socket;
-					sock.on('free', onfree);
+					sock.once('free', onfree);
 					req.onSocket(sock);
 					return;
 				}
