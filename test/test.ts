@@ -5,11 +5,13 @@ import assert from 'assert';
 import listen from 'async-listen';
 import { Agent, RequestOptions } from '../src';
 
+// In Node 10+ you can just override `http.globalAgent`, but for older Node
+// versions we have to patch the internal `_http_agent` module instead.
+// @ts-ignore
+import httpAgent from '_http_agent';
+
 const req = (opts: http.RequestOptions): Promise<http.IncomingMessage> => {
-	return new Promise(resolve => {
-		const req = http.request(opts, resolve);
-		req.end();
-	});
+	return new Promise(resolve => http.request(opts, resolve).end());
 };
 
 function json(res: http.IncomingMessage): Promise<any> {
@@ -63,6 +65,8 @@ describe('"http" module', () => {
 		const agent = new Agent(
 			(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
 				gotCallback = true;
+				assert.equal(opts.secureEndpoint, false);
+				assert.equal(opts.protocol, 'http:');
 				return net.connect(opts);
 			}
 		);
@@ -79,9 +83,10 @@ describe('"http" module', () => {
 		if (typeof addr === 'string') {
 			throw new Error('Server did not bind to a port');
 		}
+		const { port } = addr;
 
 		try {
-			const info = url.parse(`http://127.0.0.1:${addr.port}/foo`);
+			const info = url.parse(`http://127.0.0.1:${port}/foo`);
 			const res = await req({ agent, ...info });
 			assert.equal('bar', res.headers['x-foo']);
 			assert.equal('/foo', res.headers['x-url']);
@@ -95,6 +100,9 @@ describe('"http" module', () => {
 	it('should not send a port number for the default port', async () => {
 		const agent = new Agent(
 			(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+				assert.equal(opts.secureEndpoint, false);
+				assert.equal(opts.protocol, 'http:');
+				assert.equal(agent.defaultPort, port);
 				return net.connect(opts);
 			}
 		);
@@ -108,16 +116,61 @@ describe('"http" module', () => {
 		if (typeof addr === 'string') {
 			throw new Error('Server did not bind to a port');
 		}
+		const { port } = addr;
 
-		agent.defaultPort = addr.port;
+		agent.defaultPort = port;
 
 		try {
-			const info = url.parse(`http://127.0.0.1:${addr.port}/foo`);
+			const info = url.parse(`http://127.0.0.1:${port}/foo`);
 			const res = await req({ agent, ...info });
 			const body = await json(res);
 			assert.equal(body.host, '127.0.0.1');
 		} finally {
 			server.close();
+		}
+	});
+
+	it('should work when overriding `http.globalAgent`', async () => {
+		let gotReq = false;
+		let gotCallback = false;
+
+		const agent = new Agent(
+			(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+				gotCallback = true;
+				assert.equal(opts.secureEndpoint, false);
+				assert.equal(opts.protocol, 'http:');
+				return net.connect(opts);
+			}
+		);
+
+		const server = http.createServer((req, res) => {
+			gotReq = true;
+			res.setHeader('X-Foo', 'bar');
+			res.setHeader('X-Url', req.url || '/');
+			res.end();
+		});
+		await listen(server);
+
+		const addr = server.address();
+		if (typeof addr === 'string') {
+			throw new Error('Server did not bind to a port');
+		}
+		const { port } = addr;
+
+		// Override the default `http.Agent.globalAgent`
+		const originalAgent = httpAgent.globalAgent;
+		httpAgent.globalAgent = agent;
+
+		try {
+			const info = url.parse(`http://127.0.0.1:${port}/foo`);
+			const res = await req(info);
+			assert.equal('bar', res.headers['x-foo']);
+			assert.equal('/foo', res.headers['x-url']);
+			assert(gotReq);
+			assert(gotCallback);
+		} finally {
+			server.close();
+			http.globalAgent = originalAgent;
 		}
 	});
 });
