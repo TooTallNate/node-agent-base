@@ -5,6 +5,11 @@ import assert from 'assert';
 import listen from 'async-listen';
 import { Agent, RequestOptions } from '../src';
 
+// In Node 10+ you can just override `http.globalAgent`, but for older Node
+// versions we have to patch the internal `_http_agent` module instead.
+// @ts-ignore
+import httpAgent from '_http_agent';
+
 const req = (opts: http.RequestOptions): Promise<http.IncomingMessage> => {
 	return new Promise(resolve => http.request(opts, resolve).end());
 };
@@ -152,9 +157,9 @@ describe('"http" module', () => {
 		}
 		const { port } = addr;
 
-		// Override the default `http.globalAgent`
-		const originalAgent = http.globalAgent;
-		http.globalAgent = agent;
+		// Override the default `http.Agent.globalAgent`
+		const originalAgent = httpAgent.globalAgent;
+		httpAgent.globalAgent = agent;
 
 		try {
 			const info = url.parse(`http://127.0.0.1:${port}/foo`);
