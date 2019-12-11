@@ -309,9 +309,9 @@ namespace createAgent {
 
 		destroy() {}
 	}
-}
 
-// So that `instanceof` works correctly
-createAgent.prototype = createAgent.Agent.prototype;
+	// So that `instanceof` works correctly
+	createAgent.prototype = createAgent.Agent.prototype;
+}
 
 export = createAgent;
