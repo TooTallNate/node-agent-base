@@ -238,16 +238,22 @@ describe('Agent (TypeScript)', () => {
 			let gotCallback2 = false;
 
 			const agent1 = new Agent(
-				async (req: http.ClientRequest, opts: RequestOptions): Promise<Agent> => {
+				async (
+					req: http.ClientRequest,
+					opts: RequestOptions
+				): Promise<Agent> => {
 					gotCallback1 = true;
 					assert.equal(opts.secureEndpoint, true);
 					assert.equal(opts.protocol, 'https:');
-					return agent2
+					return agent2;
 				}
 			);
 
 			const agent2 = new Agent(
-				async (req: http.ClientRequest, opts: RequestOptions): Promise<net.Socket> => {
+				async (
+					req: http.ClientRequest,
+					opts: RequestOptions
+				): Promise<net.Socket> => {
 					gotCallback2 = true;
 					assert.equal(opts.secureEndpoint, true);
 					assert.equal(opts.protocol, 'https:');
