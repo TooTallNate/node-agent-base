@@ -32,7 +32,6 @@
     "url": "https://github.com/TooTallNate/node-agent-base/issues"
   },
   "devDependencies": {
-    "@types/es6-promisify": "^5.0.0",
     "@types/mocha": "^5.2.7",
     "@types/node": "^10.5.3",
     "@types/ws": "^6.0.3",
@@ -51,9 +50,6 @@
     "rimraf": "^3.0.0",
     "typescript": "^3.5.3",
     "ws": "^3.0.0"
-  },
-  "dependencies": {
-    "es6-promisify": "^5.0.0"
   },
   "engines": {
     "node": ">= 6.0.0"

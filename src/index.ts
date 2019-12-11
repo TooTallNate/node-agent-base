@@ -1,7 +1,7 @@
 import net from 'net';
 import http from 'http';
-import promisify from 'es6-promisify';
 import { EventEmitter } from 'events';
+import promisify from './promisify';
 
 function isAgentBase(v: any): v is createAgent.Agent {
 	return Boolean(v) && typeof v.addRequest === 'function';
@@ -78,8 +78,8 @@ namespace createAgent {
 		public maxSockets: number;
 		public sockets: net.Socket[];
 		public requests: http.ClientRequest[];
-		private _promisifiedCallback?: createAgent.AgentCallbackPromise;
-		private _defaultPort?: number;
+		private promisifiedCallback?: createAgent.AgentCallbackPromise;
+		private explicitDefaultPort?: number;
 
 		constructor(
 			callback?: createAgent.AgentCallback | createAgent.AgentOptions,
@@ -88,7 +88,7 @@ namespace createAgent {
 			super();
 
 			// The callback gets promisified lazily
-			this._promisifiedCallback = undefined;
+			this.promisifiedCallback = undefined;
 
 			let opts = _opts;
 			if (typeof callback === 'function') {
@@ -112,15 +112,15 @@ namespace createAgent {
 		}
 
 		get defaultPort(): number {
-			if (typeof this._defaultPort === 'number') {
-				return this._defaultPort;
+			if (typeof this.explicitDefaultPort === 'number') {
+				return this.explicitDefaultPort;
 			} else {
 				return isSecureEndpoint() ? 443 : 80;
 			}
 		}
 
 		set defaultPort(v: number) {
-			this._defaultPort = v;
+			this.explicitDefaultPort = v;
 		}
 
 		callback(
@@ -261,14 +261,12 @@ namespace createAgent {
 				return;
 			}
 
-			if (!this._promisifiedCallback) {
+			if (!this.promisifiedCallback) {
 				if (this.callback.length >= 3) {
 					// Legacy callback function - convert to a Promise
-					this._promisifiedCallback = promisify(this.callback, {
-						thisArg: this
-					});
+					this.promisifiedCallback = promisify(this.callback);
 				} else {
-					this._promisifiedCallback = this.callback;
+					this.promisifiedCallback = this.callback;
 				}
 			}
 
@@ -281,7 +279,7 @@ namespace createAgent {
 			}
 
 			try {
-				Promise.resolve(this._promisifiedCallback(req, opts)).then(
+				Promise.resolve(this.promisifiedCallback(req, opts)).then(
 					onsocket,
 					callbackError
 				);
