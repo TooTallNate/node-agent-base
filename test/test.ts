@@ -231,5 +231,64 @@ describe('Agent (TypeScript)', () => {
 				server.close();
 			}
 		});
+
+		it('should work when returning another `agent-base`', async () => {
+			let gotReq = false;
+			let gotCallback1 = false;
+			let gotCallback2 = false;
+
+			const agent1 = new Agent(
+				async (req: http.ClientRequest, opts: RequestOptions): Promise<Agent> => {
+					gotCallback1 = true;
+					assert.equal(opts.secureEndpoint, true);
+					assert.equal(opts.protocol, 'https:');
+					return agent2
+				}
+			);
+
+			const agent2 = new Agent(
+				async (req: http.ClientRequest, opts: RequestOptions): Promise<net.Socket> => {
+					gotCallback2 = true;
+					assert.equal(opts.secureEndpoint, true);
+					assert.equal(opts.protocol, 'https:');
+					return tls.connect(opts);
+				}
+			);
+
+			var options = {
+				key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+				cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
+			};
+			const server = https.createServer(options, (req, res) => {
+				gotReq = true;
+				res.setHeader('X-Foo', 'bar');
+				res.setHeader('X-Url', req.url || '/');
+				res.end();
+			});
+			await listen(server);
+
+			const addr = server.address();
+			if (typeof addr === 'string') {
+				throw new Error('Server did not bind to a port');
+			}
+			const { port } = addr;
+
+			try {
+				const info = url.parse(`https://127.0.0.1:${port}/foo`);
+				const rejectUnauthorized = false;
+				const res = await req({
+					agent: agent1,
+					rejectUnauthorized,
+					...info
+				});
+				assert.equal('bar', res.headers['x-foo']);
+				assert.equal('/foo', res.headers['x-url']);
+				assert(gotReq);
+				assert(gotCallback1);
+				assert(gotCallback2);
+			} finally {
+				server.close();
+			}
+		});
 	});
 });

@@ -167,10 +167,11 @@ namespace createAgent {
 		 * @api public
 		 */
 		addRequest(req: ClientRequest, _opts: RequestOptions) {
-			const ownOpts: RequestOptions = {
-				..._opts,
-				secureEndpoint: isSecureEndpoint()
-			};
+			const ownOpts: RequestOptions = { ..._opts };
+
+			if (typeof ownOpts.secureEndpoint !== 'boolean') {
+				ownOpts.secureEndpoint = isSecureEndpoint();
+			}
 
 			// Set default `host` for HTTP to localhost
 			if (ownOpts.host == null) {
