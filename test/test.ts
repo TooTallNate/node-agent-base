@@ -16,7 +16,9 @@ import httpAgent from '_http_agent';
 
 const req = (opts: https.RequestOptions): Promise<http.IncomingMessage> => {
 	return new Promise(resolve => {
-		(opts.protocol === 'https:' ? https : http).request(opts, resolve).end();;
+		(opts.protocol === 'https:' ? https : http)
+			.request(opts, resolve)
+			.end();
 	});
 };
 
