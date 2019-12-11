@@ -88,9 +88,6 @@ namespace createAgent {
 		) {
 			super();
 
-			// The callback gets promisified lazily
-			this.promisifiedCallback = undefined;
-
 			let opts = _opts;
 			if (typeof callback === 'function') {
 				this.callback = callback;
