@@ -234,10 +234,6 @@ namespace createAgent {
 			const onsocket = (socket: AgentCallbackReturn) => {
 				let sock: net.Socket;
 
-				const onfree = () => {
-					freeSocket.call(this, sock, opts);
-				};
-
 				if (timedOut) return;
 				if (timeoutId != null) {
 					clearTimeout(timeoutId);
@@ -254,7 +250,9 @@ namespace createAgent {
 
 				if (socket) {
 					sock = socket;
-					sock.once('free', onfree);
+					sock.once('free', () => {
+						freeSocket.call(this, sock, opts);
+					});
 					req.onSocket(sock);
 					return;
 				}
