@@ -209,15 +209,15 @@ namespace createAgent {
 			const timeoutMs = opts.timeout || this.timeout;
 			const freeSocket = this.freeSocket;
 
-			function onerror(err: NodeJS.ErrnoException) {
+			const onerror = (err: NodeJS.ErrnoException) => {
 				if (req._hadError) return;
 				req.emit('error', err);
 				// For Safety. Some additional errors might fire later on
 				// and we need to make sure we don't double-fire the error event.
 				req._hadError = true;
-			}
+			};
 
-			function ontimeout() {
+			const ontimeout = () => {
 				timeoutId = null;
 				timedOut = true;
 				const err: NodeJS.ErrnoException = new Error(
@@ -225,23 +225,23 @@ namespace createAgent {
 				);
 				err.code = 'ETIMEOUT';
 				onerror(err);
-			}
+			};
 
-			function callbackError(err: NodeJS.ErrnoException) {
+			const callbackError = (err: NodeJS.ErrnoException) => {
 				if (timedOut) return;
 				if (timeoutId !== null) {
 					clearTimeout(timeoutId);
 					timeoutId = null;
 				}
 				onerror(err);
-			}
+			};
 
-			function onsocket(socket: AgentCallbackReturn) {
+			const onsocket = (socket: AgentCallbackReturn) => {
 				let sock: net.Socket;
 
-				function onfree() {
-					freeSocket(sock, opts);
-				}
+				const onfree = () => {
+					freeSocket.call(this, sock, opts);
+				};
 
 				if (timedOut) return;
 				if (timeoutId != null) {
@@ -268,7 +268,7 @@ namespace createAgent {
 					`no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``
 				);
 				onerror(err);
-			}
+			};
 
 			if (typeof this.callback !== 'function') {
 				onerror(new Error('`callback` is not defined'));
