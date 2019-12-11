@@ -8,8 +8,9 @@ import assert from 'assert';
 import listen from 'async-listen';
 import { Agent, RequestOptions } from '../src';
 
-// In Node 10+ you can just override `http.globalAgent`, but for older Node
-// versions we have to patch the internal `_http_agent` module instead.
+// In Node 12+ you can just override `http.globalAgent`, but for older Node
+// versions we have to patch the internal `_http_agent` module instead
+// (see: https://github.com/nodejs/node/pull/25170).
 // @ts-ignore
 import httpAgent from '_http_agent';
 
