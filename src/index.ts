@@ -55,7 +55,9 @@ namespace createAgent {
 
 	export type AgentCallback = typeof Agent.prototype.callback;
 
-	export type AgentOptions = http.AgentOptions & {};
+	export type AgentOptions = {
+		timeout?: number;
+	};
 
 	export type RequestOptions = http.RequestOptions & {
 		// `port` on http.RequestOptions can be a string or undefined,
@@ -73,7 +75,6 @@ namespace createAgent {
 	 */
 	export class Agent extends EventEmitter {
 		public timeout: number | null;
-		public options?: createAgent.AgentOptions;
 		public maxFreeSockets: number;
 		public maxSockets: number;
 		public sockets: net.Socket[];
@@ -100,8 +101,6 @@ namespace createAgent {
 			if (opts && typeof opts.timeout === 'number') {
 				this.timeout = opts.timeout;
 			}
-
-			this.options = opts || {};
 
 			this.maxFreeSockets = 1;
 			this.maxSockets = 1;
