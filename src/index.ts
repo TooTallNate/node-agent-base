@@ -181,9 +181,10 @@ namespace createAgent {
 			}
 
 			if (opts.host && opts.path) {
-				// If both a `host` and `path` are specified then it's most likely the
-				// result of a `url.parse()` call... we need to remove the `path` portion so
-				// that `net.connect()` doesn't attempt to open that as a unix socket file.
+				// If both a `host` and `path` are specified then it's most
+				// likely the result of a `url.parse()` call... we need to
+				// remove the `path` portion so that `net.connect()` doesn't
+				// attempt to open that as a unix socket file.
 				delete opts.path;
 			}
 
