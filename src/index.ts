@@ -202,7 +202,6 @@ namespace createAgent {
 			let timedOut = false;
 			let timeoutId: ReturnType<typeof setTimeout> | null = null;
 			const timeoutMs = opts.timeout || this.timeout;
-			const freeSocket = this.freeSocket;
 
 			const onerror = (err: NodeJS.ErrnoException) => {
 				if (req._hadError) return;
@@ -232,8 +231,6 @@ namespace createAgent {
 			};
 
 			const onsocket = (socket: AgentCallbackReturn) => {
-				let sock: net.Socket;
-
 				if (timedOut) return;
 				if (timeoutId != null) {
 					clearTimeout(timeoutId);
@@ -249,11 +246,10 @@ namespace createAgent {
 				}
 
 				if (socket) {
-					sock = socket;
-					sock.once('free', () => {
-						freeSocket.call(this, sock, opts);
+					socket.once('free', () => {
+						this.freeSocket(socket, opts);
 					});
-					req.onSocket(sock);
+					req.onSocket(socket);
 					return;
 				}
 
