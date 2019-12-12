@@ -161,24 +161,24 @@ namespace createAgent {
 		 *
 		 * @api public
 		 */
-		addRequest(req: ClientRequest, _opts: RequestOptions) {
-			const ownOpts: RequestOptions = { ..._opts };
+		addRequest(req: ClientRequest, _opts: RequestOptions): void {
+			const opts: RequestOptions = { ..._opts };
 
-			if (typeof ownOpts.secureEndpoint !== 'boolean') {
-				ownOpts.secureEndpoint = isSecureEndpoint();
+			if (typeof opts.secureEndpoint !== 'boolean') {
+				opts.secureEndpoint = isSecureEndpoint();
 			}
 
-			// Set default `host` for HTTP to localhost
-			if (ownOpts.host == null) {
-				ownOpts.host = 'localhost';
+			if (opts.host == null) {
+				opts.host = 'localhost';
 			}
 
-			// Set default `port` for HTTP if none was explicitly specified
-			if (ownOpts.port == null) {
-				ownOpts.port = ownOpts.secureEndpoint ? 443 : 80;
+			if (opts.port == null) {
+				opts.port = opts.secureEndpoint ? 443 : 80;
 			}
 
-			const opts = { ...this.options, ...ownOpts };
+			if (opts.protocol == null) {
+				opts.protocol = opts.secureEndpoint ? 'https:' : 'http:';
+			}
 
 			if (opts.host && opts.path) {
 				// If both a `host` and `path` are specified then it's most likely the
