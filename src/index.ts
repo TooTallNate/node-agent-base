@@ -1,7 +1,10 @@
 import net from 'net';
 import http from 'http';
 import { EventEmitter } from 'events';
+import createDebug from 'debug';
 import promisify from './promisify';
+
+const debug = createDebug('agent-base');
 
 function isAgentBase(v: any): v is createAgent.Agent {
 	return Boolean(v) && typeof v.addRequest === 'function';
@@ -241,6 +244,7 @@ namespace createAgent {
 					// `socket` is actually an `http.Agent` instance, so
 					// relinquish responsibility for this `req` to the Agent
 					// from here on
+					debug('Callback returned another Agent instance %o', socket.constructor.name);
 					(socket as createAgent.Agent).addRequest(req, opts);
 					return;
 				}
@@ -266,7 +270,7 @@ namespace createAgent {
 
 			if (!this.promisifiedCallback) {
 				if (this.callback.length >= 3) {
-					// Legacy callback function - convert to a Promise
+					debug('Converting legacy callback function to promise');
 					this.promisifiedCallback = promisify(this.callback);
 				} else {
 					this.promisifiedCallback = this.callback;
@@ -282,6 +286,7 @@ namespace createAgent {
 			}
 
 			try {
+				debug('Resolving socket for %o request: %o', opts.protocol, `${req.method} ${req.path}`);
 				Promise.resolve(this.promisifiedCallback(req, opts)).then(
 					onsocket,
 					callbackError

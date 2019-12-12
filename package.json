@@ -31,7 +31,11 @@
   "bugs": {
     "url": "https://github.com/TooTallNate/node-agent-base/issues"
   },
+  "dependencies": {
+    "debug": "4"
+  },
   "devDependencies": {
+    "@types/debug": "4",
     "@types/mocha": "^5.2.7",
     "@types/node": "^10.5.3",
     "@types/ws": "^6.0.3",
