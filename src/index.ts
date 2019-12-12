@@ -244,7 +244,10 @@ namespace createAgent {
 					// `socket` is actually an `http.Agent` instance, so
 					// relinquish responsibility for this `req` to the Agent
 					// from here on
-					debug('Callback returned another Agent instance %o', socket.constructor.name);
+					debug(
+						'Callback returned another Agent instance %o',
+						socket.constructor.name
+					);
 					(socket as createAgent.Agent).addRequest(req, opts);
 					return;
 				}
@@ -286,7 +289,11 @@ namespace createAgent {
 			}
 
 			try {
-				debug('Resolving socket for %o request: %o', opts.protocol, `${req.method} ${req.path}`);
+				debug(
+					'Resolving socket for %o request: %o',
+					opts.protocol,
+					`${req.method} ${req.path}`
+				);
 				Promise.resolve(this.promisifiedCallback(req, opts)).then(
 					onsocket,
 					callbackError
