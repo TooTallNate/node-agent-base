@@ -304,11 +304,13 @@ namespace createAgent {
 		}
 
 		freeSocket(socket: net.Socket, opts: AgentOptions) {
-			// TODO reuse sockets
+			debug('Freeing socket %o %o', socket.constructor.name, opts);
 			socket.destroy();
 		}
 
-		destroy() {}
+		destroy() {
+			debug('Destroying agent %o', this.constructor.name);
+		}
 	}
 
 	// So that `instanceof` works correctly
