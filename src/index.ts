@@ -7,11 +7,7 @@ import promisify from './promisify';
 
 const debug = createDebug('agent-base');
 
-function isAgentBase(v: any): v is createAgent.Agent {
-	return Boolean(v) && typeof v.addRequest === 'function';
-}
-
-function isHttpAgent(v: any): v is http.Agent {
+function isAgent(v: any): v is createAgent.AgentLike {
 	return Boolean(v) && typeof v.addRequest === 'function';
 }
 
@@ -60,10 +56,11 @@ namespace createAgent {
 
 	export type RequestOptions = HttpRequestOptions | HttpsRequestOptions;
 
+	export type AgentLike = Pick<createAgent.Agent, 'addRequest'> | http.Agent;
+
 	export type AgentCallbackReturn =
 		| net.Socket
-		| createAgent.Agent
-		| http.Agent;
+		| AgentLike;
 
 	export type AgentCallbackCallback = (
 		err: Error | null | undefined,
@@ -254,7 +251,7 @@ namespace createAgent {
 					timeoutId = null;
 				}
 
-				if (isAgentBase(socket) || isHttpAgent(socket)) {
+				if (isAgent(socket)) {
 					// `socket` is actually an `http.Agent` instance, so
 					// relinquish responsibility for this `req` to the Agent
 					// from here on
