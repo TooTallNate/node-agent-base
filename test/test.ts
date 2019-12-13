@@ -14,6 +14,8 @@ import { Agent, RequestOptions } from '../src';
 // @ts-ignore
 import httpAgent from '_http_agent';
 
+const sleep = (n: number) => new Promise(r => setTimeout(r, n));
+
 const req = (opts: https.RequestOptions): Promise<http.IncomingMessage> => {
 	return new Promise(resolve => {
 		(opts.protocol === 'https:' ? https : http)
@@ -179,6 +181,46 @@ describe('Agent (TypeScript)', () => {
 			} finally {
 				server.close();
 				http.globalAgent = originalAgent;
+			}
+		});
+
+		it('should work after the first tick of the `http.ClientRequest` instance', async () => {
+			let gotReq = false;
+			let gotCallback = false;
+
+			const agent = new Agent(
+				async (req: http.ClientRequest, opts: RequestOptions): Promise<net.Socket> => {
+					gotCallback = true;
+					assert.equal(opts.secureEndpoint, false);
+					assert.equal(opts.protocol, 'http:');
+					await sleep(10);
+					return net.connect(opts);
+				}
+			);
+
+			const server = http.createServer((req, res) => {
+				gotReq = true;
+				res.setHeader('X-Foo', 'bar');
+				res.setHeader('X-Url', req.url || '/');
+				res.end();
+			});
+			await listen(server);
+
+			const addr = server.address();
+			if (typeof addr === 'string') {
+				throw new Error('Server did not bind to a port');
+			}
+			const { port } = addr;
+
+			try {
+				const info = url.parse(`http://127.0.0.1:${port}/foo`);
+				const res = await req({ agent, ...info });
+				assert.equal('bar', res.headers['x-foo']);
+				assert.equal('/foo', res.headers['x-url']);
+				assert(gotReq);
+				assert(gotCallback);
+			} finally {
+				server.close();
 			}
 		});
 	});
