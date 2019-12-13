@@ -58,9 +58,7 @@ namespace createAgent {
 
 	export type AgentLike = Pick<createAgent.Agent, 'addRequest'> | http.Agent;
 
-	export type AgentCallbackReturn =
-		| net.Socket
-		| AgentLike;
+	export type AgentCallbackReturn = net.Socket | AgentLike;
 
 	export type AgentCallbackCallback = (
 		err: Error | null | undefined,
