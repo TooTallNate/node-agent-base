@@ -189,7 +189,10 @@ describe('Agent (TypeScript)', () => {
 			let gotCallback = false;
 
 			const agent = new Agent(
-				async (req: http.ClientRequest, opts: RequestOptions): Promise<net.Socket> => {
+				async (
+					req: http.ClientRequest,
+					opts: RequestOptions
+				): Promise<net.Socket> => {
 					gotCallback = true;
 					assert.equal(opts.secureEndpoint, false);
 					assert.equal(opts.protocol, 'http:');
