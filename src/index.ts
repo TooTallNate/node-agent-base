@@ -1,5 +1,6 @@
 import net from 'net';
 import http from 'http';
+import https from 'https';
 import { EventEmitter } from 'events';
 import createDebug from 'debug';
 import promisify from './promisify';
@@ -33,11 +34,31 @@ function createAgent(
 }
 
 namespace createAgent {
-	export type ClientRequest = http.ClientRequest & {
+	export interface ClientRequest extends http.ClientRequest {
 		_last?: boolean;
 		_hadError?: boolean;
 		method: string;
-	};
+	}
+
+	export interface AgentRequestOptions {
+		// `port` on http.RequestOptions can be a string or undefined,
+		// but `net.TcpNetConnectOpts` expects only a number
+		port: number;
+	}
+
+	export interface HttpRequestOptions
+		extends AgentRequestOptions,
+			Omit<http.RequestOptions, 'port'> {
+		secureEndpoint: false;
+	}
+
+	export interface HttpsRequestOptions
+		extends AgentRequestOptions,
+			Omit<https.RequestOptions, 'port'> {
+		secureEndpoint: true;
+	}
+
+	export type RequestOptions = HttpRequestOptions | HttpsRequestOptions;
 
 	export type AgentCallbackReturn =
 		| net.Socket
@@ -60,13 +81,6 @@ namespace createAgent {
 
 	export type AgentOptions = {
 		timeout?: number;
-	};
-
-	export type RequestOptions = http.RequestOptions & {
-		// `port` on http.RequestOptions can be a string or undefined,
-		// but `net.TcpNetConnectOpts` expects only a number
-		port: number;
-		secureEndpoint: boolean;
 	};
 
 	/**
