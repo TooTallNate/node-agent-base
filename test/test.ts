@@ -24,6 +24,11 @@ const req = (opts: https.RequestOptions): Promise<http.IncomingMessage> => {
 	});
 };
 
+const sslOptions = {
+	key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
+	cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
+};
+
 function json(res: http.IncomingMessage): Promise<any> {
 	return new Promise((resolve, reject) => {
 		let data: string = '';
@@ -242,11 +247,7 @@ describe('Agent (TypeScript)', () => {
 				}
 			);
 
-			var options = {
-				key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
-				cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
-			};
-			const server = https.createServer(options, (req, res) => {
+			const server = https.createServer(sslOptions, (req, res) => {
 				gotReq = true;
 				res.setHeader('X-Foo', 'bar');
 				res.setHeader('X-Url', req.url || '/');
@@ -306,11 +307,7 @@ describe('Agent (TypeScript)', () => {
 				}
 			);
 
-			var options = {
-				key: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.key'),
-				cert: fs.readFileSync(__dirname + '/ssl-cert-snakeoil.pem')
-			};
-			const server = https.createServer(options, (req, res) => {
+			const server = https.createServer(sslOptions, (req, res) => {
 				gotReq = true;
 				res.setHeader('X-Foo', 'bar');
 				res.setHeader('X-Url', req.url || '/');
