@@ -94,7 +94,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;
@@ -128,7 +128,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;
@@ -167,7 +167,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;
@@ -215,7 +215,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;
@@ -256,7 +256,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;
@@ -316,7 +316,7 @@ describe('Agent (TypeScript)', () => {
 			await listen(server);
 
 			const addr = server.address();
-			if (typeof addr === 'string') {
+			if (!addr || typeof addr === 'string') {
 				throw new Error('Server did not bind to a port');
 			}
 			const { port } = addr;

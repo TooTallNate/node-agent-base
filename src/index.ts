@@ -37,6 +37,8 @@ namespace createAgent {
 	}
 
 	export interface AgentRequestOptions {
+		host?: string;
+		path?: string;
 		// `port` on http.RequestOptions can be a string or undefined,
 		// but `net.TcpNetConnectOpts` expects only a number
 		port: number;
@@ -44,13 +46,13 @@ namespace createAgent {
 
 	export interface HttpRequestOptions
 		extends AgentRequestOptions,
-			Omit<http.RequestOptions, 'port'> {
+			Omit<http.RequestOptions, 'host' | 'port' | 'path'> {
 		secureEndpoint: false;
 	}
 
 	export interface HttpsRequestOptions
 		extends AgentRequestOptions,
-			Omit<https.RequestOptions, 'port'> {
+			Omit<https.RequestOptions, 'host' | 'port' | 'path'> {
 		secureEndpoint: true;
 	}
 
@@ -89,8 +91,12 @@ namespace createAgent {
 		public timeout: number | null;
 		public maxFreeSockets: number;
 		public maxSockets: number;
-		public sockets: net.Socket[];
-		public requests: http.ClientRequest[];
+		public sockets: {
+			[key: string]: net.Socket[];
+		};
+		public requests: {
+			[key: string]: http.IncomingMessage[];
+		};
 		private promisifiedCallback?: createAgent.AgentCallbackPromise;
 		private explicitDefaultPort?: number;
 		private explicitProtocol?: string;
@@ -108,16 +114,18 @@ namespace createAgent {
 				opts = callback;
 			}
 
-			// timeout for the socket to be returned from the callback
+			// Timeout for the socket to be returned from the callback
 			this.timeout = null;
 			if (opts && typeof opts.timeout === 'number') {
 				this.timeout = opts.timeout;
 			}
 
+			// These aren't actually used by `agent-base`, but are required
+			// for the TypeScript definition files in `@types/node` :/
 			this.maxFreeSockets = 1;
 			this.maxSockets = 1;
-			this.sockets = [];
-			this.requests = [];
+			this.sockets = {};
+			this.requests = {};
 		}
 
 		get defaultPort(): number {
