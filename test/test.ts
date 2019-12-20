@@ -263,10 +263,9 @@ describe('Agent (TypeScript)', () => {
 
 			try {
 				const info = url.parse(`https://127.0.0.1:${port}/foo`);
-				const rejectUnauthorized = false;
 				const res = await req({
 					agent,
-					rejectUnauthorized,
+					rejectUnauthorized: false,
 					...info
 				});
 				assert.equal('bar', res.headers['x-foo']);
@@ -323,10 +322,9 @@ describe('Agent (TypeScript)', () => {
 
 			try {
 				const info = url.parse(`https://127.0.0.1:${port}/foo`);
-				const rejectUnauthorized = false;
 				const res = await req({
 					agent: agent1,
-					rejectUnauthorized,
+					rejectUnauthorized: false,
 					...info
 				});
 				assert.equal('bar', res.headers['x-foo']);
