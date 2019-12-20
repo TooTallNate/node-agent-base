@@ -40,20 +40,20 @@ namespace createAgent {
 	export interface AgentRequestOptions {
 		host?: string;
 		path?: string;
-		// `port` on http.RequestOptions can be a string or undefined,
+		// `port` on `http.RequestOptions` can be a string or undefined,
 		// but `net.TcpNetConnectOpts` expects only a number
 		port: number;
 	}
 
 	export interface HttpRequestOptions
 		extends AgentRequestOptions,
-			Omit<http.RequestOptions, 'host' | 'port' | 'path'> {
+			Omit<http.RequestOptions, keyof AgentRequestOptions> {
 		secureEndpoint: false;
 	}
 
 	export interface HttpsRequestOptions
 		extends AgentRequestOptions,
-			Omit<https.RequestOptions, 'host' | 'port' | 'path'> {
+			Omit<https.RequestOptions, keyof AgentRequestOptions> {
 		secureEndpoint: true;
 	}
 
