@@ -1,6 +1,7 @@
 import net from 'net';
 import http from 'http';
 import https from 'https';
+import { Duplex } from 'stream';
 import { EventEmitter } from 'events';
 import createDebug from 'debug';
 import promisify from './promisify';
@@ -60,7 +61,7 @@ namespace createAgent {
 
 	export type AgentLike = Pick<createAgent.Agent, 'addRequest'> | http.Agent;
 
-	export type AgentCallbackReturn = net.Socket | AgentLike;
+	export type AgentCallbackReturn = Duplex | AgentLike;
 
 	export type AgentCallbackCallback = (
 		err: Error | null | undefined,
@@ -218,7 +219,6 @@ namespace createAgent {
 			req._last = true;
 			req.shouldKeepAlive = false;
 
-			// Create the `stream.Duplex` instance
 			let timedOut = false;
 			let timeoutId: ReturnType<typeof setTimeout> | null = null;
 			const timeoutMs = opts.timeout || this.timeout;
@@ -271,9 +271,9 @@ namespace createAgent {
 
 				if (socket) {
 					socket.once('free', () => {
-						this.freeSocket(socket, opts);
+						this.freeSocket(socket as net.Socket, opts);
 					});
-					req.onSocket(socket);
+					req.onSocket(socket as net.Socket);
 					return;
 				}
 
