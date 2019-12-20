@@ -20,7 +20,7 @@ export default function promisify(fn: LegacyCallback): AgentCallbackPromise {
 				this,
 				req,
 				opts,
-				(err: Error | null | undefined, rtn: AgentCallbackReturn) => {
+				(err: Error | null | undefined, rtn?: AgentCallbackReturn) => {
 					if (err) {
 						reject(err);
 					} else {
