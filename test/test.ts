@@ -336,5 +336,47 @@ describe('Agent (TypeScript)', () => {
 				server.close();
 			}
 		});
+
+		it('should not send a port number for the default port', async () => {
+			let reqCount = 0;
+
+			const agent = new Agent(
+				(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+					assert.equal(opts.secureEndpoint, true);
+					assert.equal(opts.protocol, 'https:');
+					assert.equal(agent.defaultPort, port);
+					assert.equal(opts.port, port);
+					return tls.connect(opts);
+				}
+			);
+
+			const server = https.createServer(sslOptions, (req, res) => {
+				reqCount++;
+				res.end(JSON.stringify(req.headers));
+			});
+			await listen(server);
+
+			const addr = server.address();
+			if (!addr || typeof addr === 'string') {
+				throw new Error('Server did not bind to a port');
+			}
+			const { port } = addr;
+
+			agent.defaultPort = port;
+
+			try {
+				const info = url.parse(`https://127.0.0.1:${port}/foo`);
+				const res = await req({
+					agent,
+					rejectUnauthorized: false,
+					...info
+				});
+				const body = await json(res);
+				assert.equal(body.host, '127.0.0.1');
+				assert.equal(reqCount, 1);
+			} finally {
+				server.close();
+			}
+		});
 	});
 });
