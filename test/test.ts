@@ -17,9 +17,10 @@ import httpAgent from '_http_agent';
 const sleep = (n: number) => new Promise(r => setTimeout(r, n));
 
 const req = (opts: https.RequestOptions): Promise<http.IncomingMessage> => {
-	return new Promise(resolve => {
+	return new Promise((resolve, reject) => {
 		(opts.protocol === 'https:' ? https : http)
 			.request(opts, resolve)
+			.once('error', reject)
 			.end();
 	});
 };
@@ -230,6 +231,56 @@ describe('Agent (TypeScript)', () => {
 			} finally {
 				server.close();
 			}
+		});
+
+		it('should emit an "error" event on `http.ClientRequest` instance when callback throws sync', async () => {
+			let gotError = false;
+			let gotCallback = false;
+
+			const agent = new Agent(
+				(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+					gotCallback = true;
+					throw new Error('bad');
+				}
+			);
+
+			try {
+				const info = url.parse('http://127.0.0.1/throws');
+				await req({ agent, ...info });
+			} catch (err) {
+				gotError = true;
+				assert.equal(err.message, 'bad');
+			}
+
+			assert(gotError);
+			assert(gotCallback);
+		});
+
+		it('should emit an "error" event on `http.ClientRequest` instance when callback throws async', async () => {
+			let gotError = false;
+			let gotCallback = false;
+
+			const agent = new Agent(
+				async (
+					req: http.ClientRequest,
+					opts: RequestOptions
+				): Promise<net.Socket> => {
+					gotCallback = true;
+					await sleep(10);
+					throw new Error('bad');
+				}
+			);
+
+			try {
+				const info = url.parse('http://127.0.0.1/throws');
+				await req({ agent, ...info });
+			} catch (err) {
+				gotError = true;
+				assert.equal(err.message, 'bad');
+			}
+
+			assert(gotError);
+			assert(gotCallback);
 		});
 	});
 
