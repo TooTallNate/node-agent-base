@@ -38,6 +38,7 @@
     "@types/debug": "4",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.17",
+    "@types/semver": "^7.1.0",
     "@types/ws": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "1.6.0",
     "@typescript-eslint/parser": "1.1.0",
@@ -52,6 +53,7 @@
     "eslint-plugin-react": "7.12.4",
     "mocha": "^6.2.0",
     "rimraf": "^3.0.0",
+    "semver": "^7.1.2",
     "typescript": "^3.5.3",
     "ws": "^3.0.0"
   },

@@ -6,6 +6,7 @@ import http from 'http';
 import https from 'https';
 import assert from 'assert';
 import listen from 'async-listen';
+import { satisfies } from 'semver';
 import { Agent, RequestOptions } from '../src';
 
 // In Node 12+ you can just override `http.globalAgent`, but for older Node
@@ -186,7 +187,7 @@ describe('Agent (TypeScript)', () => {
 				assert(gotCallback);
 			} finally {
 				server.close();
-				http.globalAgent = originalAgent;
+				httpAgent.globalAgent = agent;
 			}
 		});
 
@@ -429,5 +430,52 @@ describe('Agent (TypeScript)', () => {
 				server.close();
 			}
 		});
+
+		if (satisfies(process.version, '>= 10')) {
+			it('should work when overriding `https.globalAgent`', async () => {
+				let gotReq = false;
+				let gotCallback = false;
+
+				const agent = new Agent(
+					(req: http.ClientRequest, opts: RequestOptions): net.Socket => {
+						gotCallback = true;
+						assert.equal(opts.secureEndpoint, true);
+						assert.equal(opts.protocol, 'https:');
+						return tls.connect(opts);
+					}
+				);
+
+				const server = https.createServer(sslOptions, (req, res) => {
+					gotReq = true;
+					res.setHeader('X-Foo', 'bar');
+					res.setHeader('X-Url', req.url || '/');
+					res.end();
+				});
+				await listen(server);
+
+				const addr = server.address();
+				if (!addr || typeof addr === 'string') {
+					throw new Error('Server did not bind to a port');
+				}
+				const { port } = addr;
+
+				// Override the default `https.globalAgent`
+				const originalAgent = https.globalAgent;
+				https.globalAgent = agent;
+
+				try {
+					const info: https.RequestOptions = url.parse(`https://127.0.0.1:${port}/foo`);
+					info.rejectUnauthorized = false;
+					const res = await req(info);
+					assert.equal('bar', res.headers['x-foo']);
+					assert.equal('/foo', res.headers['x-url']);
+					assert(gotReq);
+					assert(gotCallback);
+				} finally {
+					server.close();
+					https.globalAgent = originalAgent;
+				}
+			});
+		}
 	});
 });
