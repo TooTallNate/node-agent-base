@@ -98,6 +98,7 @@ namespace createAgent {
 		public requests: {
 			[key: string]: http.IncomingMessage[];
 		};
+		public options: https.AgentOptions;
 		private promisifiedCallback?: createAgent.AgentCallbackPromise;
 		private explicitDefaultPort?: number;
 		private explicitProtocol?: string;
@@ -127,6 +128,7 @@ namespace createAgent {
 			this.maxSockets = 1;
 			this.sockets = {};
 			this.requests = {};
+			this.options = {};
 		}
 
 		get defaultPort(): number {
