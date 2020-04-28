@@ -64,8 +64,8 @@ namespace createAgent {
 	export type AgentCallbackReturn = Duplex | AgentLike;
 
 	export type AgentCallbackCallback = (
-		err: Error | null | undefined,
-		socket: createAgent.AgentCallbackReturn
+		err?: Error | null,
+		socket?: createAgent.AgentCallbackReturn
 	) => void;
 
 	export type AgentCallbackPromise = (
