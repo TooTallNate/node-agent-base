@@ -93,6 +93,7 @@ namespace createAgent {
 		public maxFreeSockets: number;
 		public maxTotalSockets: number;
 		public maxSockets: number;
+		public maxTotalSockets: number;
 		public sockets: {
 			[key: string]: net.Socket[];
 		};
@@ -131,6 +132,7 @@ namespace createAgent {
 			this.maxFreeSockets = 1;
 			this.maxTotalSockets = 1;
 			this.maxSockets = 1;
+			this.maxTotalSockets = Infinity;
 			this.sockets = {};
 			this.freeSockets = {};
 			this.requests = {};
