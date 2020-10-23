@@ -95,6 +95,9 @@ namespace createAgent {
 		public sockets: {
 			[key: string]: net.Socket[];
 		};
+		public freeSockets: {
+			[key: string]: net.Socket[];
+		};
 		public requests: {
 			[key: string]: http.IncomingMessage[];
 		};
@@ -127,6 +130,7 @@ namespace createAgent {
 			this.maxFreeSockets = 1;
 			this.maxSockets = 1;
 			this.sockets = {};
+			this.freeSockets = {};
 			this.requests = {};
 			this.options = {};
 		}
