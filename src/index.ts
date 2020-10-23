@@ -93,7 +93,6 @@ namespace createAgent {
 		public maxFreeSockets: number;
 		public maxTotalSockets: number;
 		public maxSockets: number;
-		public maxTotalSockets: number;
 		public sockets: {
 			[key: string]: net.Socket[];
 		};
@@ -130,7 +129,6 @@ namespace createAgent {
 			// These aren't actually used by `agent-base`, but are required
 			// for the TypeScript definition files in `@types/node` :/
 			this.maxFreeSockets = 1;
-			this.maxTotalSockets = 1;
 			this.maxSockets = 1;
 			this.maxTotalSockets = Infinity;
 			this.sockets = {};
