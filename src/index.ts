@@ -15,7 +15,7 @@ function isAgent(v: any): v is createAgent.AgentLike {
 function isSecureEndpoint(): boolean {
 	const { stack } = new Error();
 	if (typeof stack !== 'string') return false;
-	return stack.split('\n').some(l => l.indexOf('(https.js:') !== -1);
+	return stack.split('\n').some(l => l.indexOf('(https.js:') !== -1  || l.indexOf('node:https:') !== -1);
 }
 
 function createAgent(opts?: createAgent.AgentOptions): createAgent.Agent;
