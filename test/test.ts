@@ -1,10 +1,10 @@
-import fs from 'fs';
-import net from 'net';
-import tls from 'tls';
-import url from 'url';
-import http from 'http';
-import https from 'https';
-import assert from 'assert';
+import * as fs from 'fs';
+import * as net from 'net';
+import * as tls from 'tls';
+import * as url from 'url';
+import * as http from 'http';
+import * as https from 'https';
+import * as assert from 'assert';
 import listen from 'async-listen';
 import { satisfies } from 'semver';
 import { Agent, RequestOptions } from '../src';
@@ -13,7 +13,7 @@ import { Agent, RequestOptions } from '../src';
 // versions we have to patch the internal `_http_agent` module instead
 // (see: https://github.com/nodejs/node/pull/25170).
 // @ts-ignore
-import httpAgent from '_http_agent';
+import * as httpAgent from '_http_agent';
 
 const sleep = (n: number) => new Promise(r => setTimeout(r, n));
 
@@ -460,8 +460,11 @@ describe('Agent (TypeScript)', () => {
 				const { port } = addr;
 
 				// Override the default `https.globalAgent`
-				const originalAgent = https.globalAgent;
-				https.globalAgent = agent;
+				// We use a `require` here because the typechecker treats the imported
+				// version is read-only, as with any imported ES6 module.
+				const httpsLib = require('https');
+				const originalAgent = httpsLib.globalAgent;
+				httpsLib.globalAgent = agent;
 
 				try {
 					const info: https.RequestOptions = url.parse(`https://127.0.0.1:${port}/foo`);
@@ -473,7 +476,7 @@ describe('Agent (TypeScript)', () => {
 					assert(gotCallback);
 				} finally {
 					server.close();
-					https.globalAgent = originalAgent;
+					httpsLib.globalAgent = originalAgent;
 				}
 			});
 		}
