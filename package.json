@@ -6,7 +6,7 @@
   "typings": "dist/src/index",
   "files": [
     "dist/src",
-    "src"
+    "!dist/**/*.tsbuildinfo"
   ],
   "scripts": {
     "prebuild": "rimraf dist",
