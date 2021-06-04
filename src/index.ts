@@ -1,6 +1,6 @@
-import net from 'net';
-import http from 'http';
-import https from 'https';
+import * as net from 'net';
+import * as http from 'http';
+import * as https from 'https';
 import { Duplex } from 'stream';
 import { EventEmitter } from 'events';
 import createDebug from 'debug';
