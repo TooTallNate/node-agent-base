@@ -24,7 +24,7 @@ export default function promisify(fn: LegacyCallback): AgentCallbackPromise {
 					if (err) {
 						reject(err);
 					} else {
-						resolve(rtn);
+						resolve(rtn!);
 					}
 				}
 			);

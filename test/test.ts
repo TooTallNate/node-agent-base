@@ -248,7 +248,7 @@ describe('Agent (TypeScript)', () => {
 			try {
 				const info = url.parse('http://127.0.0.1/throws');
 				await req({ agent, ...info });
-			} catch (err) {
+			} catch (err: any) {
 				gotError = true;
 				assert.equal(err.message, 'bad');
 			}
@@ -275,7 +275,7 @@ describe('Agent (TypeScript)', () => {
 			try {
 				const info = url.parse('http://127.0.0.1/throws');
 				await req({ agent, ...info });
-			} catch (err) {
+			} catch (err: any) {
 				gotError = true;
 				assert.equal(err.message, 'bad');
 			}
