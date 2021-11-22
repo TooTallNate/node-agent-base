@@ -3,7 +3,7 @@
   "version": "6.0.2",
   "description": "Turn a function into an `http.Agent` instance",
   "main": "dist/src/index",
-  "typings": "dist/src/index",
+  "typings": "dist/src/index.ts",
   "files": [
     "dist/src",
     "src"
