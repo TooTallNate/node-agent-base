@@ -1,19 +1,13 @@
-import fs from 'fs';
-import net from 'net';
-import tls from 'tls';
-import url from 'url';
-import http from 'http';
-import https from 'https';
-import assert from 'assert';
+import * as fs from 'fs';
+import * as net from 'net';
+import * as tls from 'tls';
+import * as url from 'url';
+import * as http from 'http';
+import * as https from 'https';
+import * as assert from 'assert';
 import listen from 'async-listen';
 import { satisfies } from 'semver';
 import { Agent, RequestOptions } from '../src';
-
-// In Node 12+ you can just override `http.globalAgent`, but for older Node
-// versions we have to patch the internal `_http_agent` module instead
-// (see: https://github.com/nodejs/node/pull/25170).
-// @ts-ignore
-import httpAgent from '_http_agent';
 
 const sleep = (n: number) => new Promise(r => setTimeout(r, n));
 
@@ -175,8 +169,9 @@ describe('Agent (TypeScript)', () => {
 			const { port } = addr;
 
 			// Override the default `http.Agent.globalAgent`
-			const originalAgent = httpAgent.globalAgent;
-			httpAgent.globalAgent = agent;
+			const originalAgent = http.globalAgent;
+			// @ts-ignore
+			http.globalAgent = agent;
 
 			try {
 				const info = url.parse(`http://127.0.0.1:${port}/foo`);
@@ -187,7 +182,8 @@ describe('Agent (TypeScript)', () => {
 				assert(gotCallback);
 			} finally {
 				server.close();
-				httpAgent.globalAgent = agent;
+				// @ts-ignore
+				http.globalAgent = originalAgent;
 			}
 		});
 
@@ -461,6 +457,7 @@ describe('Agent (TypeScript)', () => {
 
 				// Override the default `https.globalAgent`
 				const originalAgent = https.globalAgent;
+				// @ts-ignore
 				https.globalAgent = agent;
 
 				try {
@@ -473,6 +470,7 @@ describe('Agent (TypeScript)', () => {
 					assert(gotCallback);
 				} finally {
 					server.close();
+					// @ts-ignore
 					https.globalAgent = originalAgent;
 				}
 			});
