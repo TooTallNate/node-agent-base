@@ -34,20 +34,15 @@ Example
 Here's a minimal example that creates a new `net.Socket` connection to the server
 for every HTTP request (i.e. the equivalent of `agent: false` option):
 
-```js
-var net = require('net');
-var tls = require('tls');
-var url = require('url');
-var http = require('http');
-var agent = require('agent-base');
+```ts
+import * as net from 'net';
+import * as tls from 'tls';
+import * as http from 'http';
+import { Agent } from 'agent-base';
 
-var endpoint = 'http://nodejs.org/api/';
-var parsed = url.parse(endpoint);
-
-// This is the important part!
-parsed.agent = agent(function (req, opts) {
+const agent = new Agent(function (req, opts) {
   var socket;
-  // `secureEndpoint` is true when using the https module
+  // `secureEndpoint` is true when using the "https" module
   if (opts.secureEndpoint) {
     socket = tls.connect(opts);
   } else {
@@ -56,8 +51,8 @@ parsed.agent = agent(function (req, opts) {
   return socket;
 });
 
-// Everything else works just like normal...
-http.get(parsed, function (res) {
+// Pass the `agent` option when creating the HTTP request
+http.get('http://nodejs.org/api/', { agent }, (res) => {
   console.log('"response" event!', res.headers);
   res.pipe(process.stdout);
 });
@@ -65,8 +60,8 @@ http.get(parsed, function (res) {
 
 Returning a Promise or using an `async` function is also supported:
 
-```js
-agent(async function (req, opts) {
+```ts
+new Agent(async (req, opts) => {
   await sleep(1000);
   // etc…
 });
@@ -75,8 +70,8 @@ agent(async function (req, opts) {
 Return another `http.Agent` instance to "pass through" the responsibility
 for that HTTP request to that agent:
 
-```js
-agent(function (req, opts) {
+```ts
+new Agent((req, opts) => {
   return opts.secureEndpoint ? https.globalAgent : http.globalAgent;
 });
 ```
